@@ -18,7 +18,7 @@
         :root {
             --bg-color: #050505; 
             --neon-color: #ffd700; 
-            --card-bg: rgba(0, 0, 0, 0.5); 
+            --card-bg: rgba(0, 0, 0, 0.55); 
             --card-border: rgba(255, 255, 255, 0.15);
         }
 
@@ -94,6 +94,13 @@
         }
 
         input:focus { outline: none; }
+        
+        .progress-bar-inner {
+            height: 100%;
+            background: var(--neon-color);
+            box-shadow: 0 0 10px var(--neon-color);
+            transition: width 1s ease-in-out;
+        }
     </style>
 </head>
 <body class="theme-clear">
@@ -128,10 +135,10 @@
             </div>
         </div>
 
-        <!-- Middle Section: Terminal & Main Card -->
-        <div class="flex flex-grow items-center justify-between mt-4 overflow-hidden">
+        <!-- Middle Section: Left Terminal, Main Card, Right Diagnostics -->
+        <div class="flex flex-grow items-center justify-between mt-4 overflow-hidden gap-6">
             
-            <!-- Left: Terminal Feed -->
+            <!-- LEFT: Terminal Feed -->
             <div id="terminal-sidebar" class="hidden lg:flex flex-col h-[60vh] w-64 glass-card p-4 interactive self-center">
                 <div class="flex items-center space-x-2 mb-3 border-b border-white/10 pb-2">
                     <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
@@ -143,12 +150,12 @@
                 </div>
             </div>
 
-            <!-- Main Weather Card -->
+            <!-- CENTER: Main Weather Card -->
             <div id="weather-card" class="glass-card neon-border p-8 md:p-10 w-full max-w-lg mx-auto interactive transform transition-all duration-700 opacity-0 scale-95 shadow-2xl">
                 <div class="flex justify-between items-start mb-8">
                     <div>
                         <h1 id="ui-city" class="text-4xl md:text-5xl font-bold tracking-tighter mb-1 drop-shadow-md">CITY</h1>
-                        <p id="ui-location-full" class="text-white/60 text-xs tracking-widest drop-shadow-sm uppercase">LOCATION SYNCING...</p>
+                        <p id="ui-location-full" class="text-white/80 text-xs tracking-widest drop-shadow-sm uppercase font-bold">LOCATION SYNCING...</p>
                     </div>
                     <div id="ui-icon" class="text-5xl neon-text">
                         <i class="ph ph-circle-dashed animate-spin"></i>
@@ -165,49 +172,102 @@
                     </div>
                     <div class="text-right">
                         <p class="text-[10px] text-white/40 uppercase tracking-widest">Feels Like</p>
-                        <p id="ui-feels" class="text-2xl font-bold">--°</p>
+                        <p id="ui-feels" class="text-3xl font-bold drop-shadow-md">--°</p>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-y-8 gap-x-8 border-t border-white/10 pt-8">
                     <div class="flex items-center space-x-4">
-                        <i class="ph ph-wind text-2xl text-white/60"></i>
+                        <i class="ph ph-wind text-2xl text-white/70"></i>
                         <div>
-                            <p class="text-[9px] text-white/40 uppercase tracking-widest">Wind Velocity</p>
+                            <p class="text-[9px] text-white/50 uppercase tracking-widest">Wind Velocity</p>
                             <p id="ui-wind" class="text-lg font-bold">-- m/s</p>
                         </div>
                     </div>
                     <div class="flex items-center space-x-4">
-                        <i class="ph ph-drop text-2xl text-white/60"></i>
+                        <i class="ph ph-drop text-2xl text-white/70"></i>
                         <div>
-                            <p class="text-[9px] text-white/40 uppercase tracking-widest">Humidity</p>
+                            <p class="text-[9px] text-white/50 uppercase tracking-widest">Humidity</p>
                             <p id="ui-humidity" class="text-lg font-bold">-- %</p>
                         </div>
                     </div>
                     <div class="flex items-center space-x-4">
-                        <i class="ph ph-gauge text-2xl text-white/60"></i>
+                        <i class="ph ph-gauge text-2xl text-white/70"></i>
                         <div>
-                            <p class="text-[9px] text-white/40 uppercase tracking-widest">Pressure</p>
+                            <p class="text-[9px] text-white/50 uppercase tracking-widest">Pressure</p>
                             <p id="ui-pressure" class="text-lg font-bold">-- hPa</p>
                         </div>
                     </div>
                     <div class="flex items-center space-x-4">
-                        <i class="ph ph-eye text-2xl text-white/60"></i>
+                        <i class="ph ph-eye text-2xl text-white/70"></i>
                         <div>
-                            <p class="text-[9px] text-white/40 uppercase tracking-widest">Visibility</p>
+                            <p class="text-[9px] text-white/50 uppercase tracking-widest">Visibility</p>
                             <p id="ui-visibility" class="text-lg font-bold">-- km</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Right Spacer for Balance -->
-            <div class="hidden lg:block w-64"></div>
+            <!-- RIGHT: Strategic Diagnostics -->
+            <div id="diagnostics-sidebar" class="hidden lg:flex flex-col h-[60vh] w-64 glass-card p-5 interactive self-center">
+                <div class="flex items-center space-x-2 mb-4 border-b border-white/10 pb-2">
+                    <i class="ph ph-activity text-white/60"></i>
+                    <span class="text-[10px] uppercase tracking-widest text-white/60">Strategic Intel</span>
+                </div>
+                
+                <div class="space-y-6 flex-grow">
+                    <!-- Sunlight Cycle -->
+                    <div>
+                        <div class="flex justify-between text-[9px] uppercase tracking-widest text-white/40 mb-2">
+                            <span>Daylight Cycle</span>
+                            <span id="ui-precip-chance">SYNCING</span>
+                        </div>
+                        <div class="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                            <div id="ui-day-progress" class="progress-bar-inner" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Environment Risk Gauges -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-[8px] text-white/30 uppercase mb-1">Precip Risk</p>
+                            <p id="ui-precip-risk" class="text-sm font-bold neon-text">--%</p>
+                        </div>
+                        <div>
+                            <p class="text-[8px] text-white/30 uppercase mb-1">UV Index</p>
+                            <p id="ui-uv" class="text-sm font-bold neon-text">--</p>
+                        </div>
+                    </div>
+
+                    <!-- Wind Vector -->
+                    <div class="flex items-center space-x-3 pt-2 border-t border-white/5">
+                        <div class="relative w-10 h-10 border border-white/10 rounded-full flex items-center justify-center">
+                            <i id="ui-wind-compass" class="ph ph-arrow-up text-lg transition-transform duration-1000"></i>
+                        </div>
+                        <div>
+                            <p class="text-[8px] text-white/30 uppercase">Wind Vector</p>
+                            <p id="ui-wind-dir" class="text-[10px] font-bold">CALCULATING</p>
+                        </div>
+                    </div>
+
+                    <!-- System Status -->
+                    <div class="mt-auto pt-4 space-y-2">
+                        <div class="flex justify-between text-[8px] text-white/20 uppercase tracking-tighter">
+                            <span>Signal Integrity</span>
+                            <span class="text-green-500">98.2%</span>
+                        </div>
+                        <div class="flex justify-between text-[8px] text-white/20 uppercase tracking-tighter">
+                            <span>Aether Buffer</span>
+                            <span>ACTIVE</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
         <!-- Bottom Section: Utility Dock -->
         <div id="utility-dock" class="w-full flex flex-col md:flex-row justify-between items-center mt-6 space-y-4 md:space-y-0 interactive">
-            
             <!-- Quick Locations -->
             <div class="flex space-x-2 text-[9px] font-bold tracking-widest">
                 <button onclick="searchCity('Tokyo')" class="px-3 py-2 glass-card hover:border-white/40 transition-colors uppercase">Tokyo</button>
@@ -222,24 +282,20 @@
                     <span class="text-[9px] uppercase tracking-[0.2em] text-white/40 group-hover:text-white transition-colors">Cinema Mode</span>
                 </button>
                 <div class="h-4 w-px bg-white/10"></div>
-                <div class="text-[10px] text-white/30 tracking-[0.2em] uppercase">
-                    AetherWeather <span class="mx-2">|</span> v3.0 Digital Atmospheric Center
+                <div class="text-[10px] text-white/30 tracking-[0.2em] uppercase font-bold">
+                    AetherWeather <span class="mx-2">|</span> v3.5 Strategic Atmos Center
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Three.js Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <script type="module">
-        // ==========================================
-        // 1. SYSTEM STATE
-        // ==========================================
         const state = {
             weatherMain: 'Clear',
             windSpeed: 0,
-            timezoneOffset: 0, // In seconds from UTC
+            timezoneOffset: 0, 
             mouse: new THREE.Vector2(0, 0),
             targetSkyColor: new THREE.Color(0x5ca0d3),
             targetGroundColor: new THREE.Color(0x2e4a22),
@@ -267,10 +323,14 @@
             uiClock: document.getElementById('ui-clock'),
             uiCoords: document.getElementById('ui-coords'),
             terminalLog: document.getElementById('terminal-log'),
-            cinemaBtn: document.getElementById('toggle-cinema')
+            cinemaBtn: document.getElementById('toggle-cinema'),
+            uiDayProgress: document.getElementById('ui-day-progress'),
+            uiPrecipRisk: document.getElementById('ui-precip-risk'),
+            uiUV: document.getElementById('ui-uv'),
+            uiWindCompass: document.getElementById('ui-wind-compass'),
+            uiWindDir: document.getElementById('ui-wind-dir')
         };
 
-        // UI Utility: Add log to terminal
         function logToTerminal(msg, type = 'info') {
             const time = new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
             const p = document.createElement('p');
@@ -280,22 +340,17 @@
             if (DOM.terminalLog.children.length > 30) DOM.terminalLog.lastChild.remove();
         }
 
-        // Clock Update (Using city local time)
         function updateClock() {
-            // Get current UTC time
             const now = new Date();
             const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
-            // Add searched city offset
             const cityTime = new Date(utcTime + (state.timezoneOffset * 1000));
-            
             DOM.uiClock.textContent = cityTime.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
             requestAnimationFrame(updateClock);
         }
 
-        // Cinema Mode Toggle
         DOM.cinemaBtn.addEventListener('click', () => {
             state.cinemaMode = !state.cinemaMode;
-            const elements = [DOM.searchForm.parentElement, document.getElementById('terminal-sidebar'), DOM.weatherCard, document.getElementById('ui-clock').parentElement];
+            const elements = [DOM.searchForm.parentElement, document.getElementById('terminal-sidebar'), document.getElementById('diagnostics-sidebar'), DOM.weatherCard, document.getElementById('ui-clock').parentElement];
             elements.forEach(el => el.classList.toggle('ui-hidden', state.cinemaMode));
             logToTerminal(state.cinemaMode ? "[SYS] Entering Cinema Mode." : "[SYS] UI Restored.");
         });
@@ -345,13 +400,13 @@
                 this.dirLight = new THREE.DirectionalLight(0xfff5b6, 1.2);
                 this.dirLight.position.set(100, 100, 50);
                 this.dirLight.castShadow = true;
-                this.dirLight.shadow.mapSize.width = 1024;
-                this.dirLight.shadow.mapSize.height = 1024;
+                this.dirLight.shadow.mapSize.width = 2048;
+                this.dirLight.shadow.mapSize.height = 2048;
                 this.dirLight.shadow.camera.far = 400;
-                this.dirLight.shadow.camera.left = -150;
-                this.dirLight.shadow.camera.right = 150;
-                this.dirLight.shadow.camera.top = 150;
-                this.dirLight.shadow.camera.bottom = -150;
+                this.dirLight.shadow.camera.left = -200;
+                this.dirLight.shadow.camera.right = 200;
+                this.dirLight.shadow.camera.top = 200;
+                this.dirLight.shadow.camera.bottom = -200;
                 this.scene.add(this.dirLight);
                 this.createGround();
                 this.createClouds();
@@ -360,11 +415,11 @@
             }
 
             createGround() {
-                const geometry = new THREE.PlaneGeometry(400, 400, 128, 128); // Increased segments for smoothness
+                const geometry = new THREE.PlaneGeometry(400, 400, 128, 128);
                 const positions = geometry.attributes.position.array;
                 for (let i = 0; i < positions.length; i += 3) {
                     const x = positions[i], y = positions[i + 1];
-                    positions[i + 2] = Math.sin(x * 0.05) * Math.cos(y * 0.05) * 8 + (Math.random() - 0.5) * 0.3;
+                    positions[i + 2] = Math.sin(x * 0.05) * Math.cos(y * 0.05) * 8 + (Math.random() - 0.5) * 0.2;
                 }
                 geometry.computeVertexNormals();
                 const material = new THREE.MeshStandardMaterial({ color: 0x2e4a22, roughness: 0.8, flatShading: false });
@@ -377,24 +432,19 @@
 
             createClouds() {
                 const canvas = document.createElement('canvas');
-                canvas.width = 1024; canvas.height = 1024; // High-res texture
+                canvas.width = 1024; canvas.height = 1024;
                 const ctx = canvas.getContext('2d');
-                
-                // Better cloud procedural generation: super soft layered radial gradients
-                for (let i = 0; i < 60; i++) {
+                for (let i = 0; i < 70; i++) {
                     const x = 512 + (Math.random() - 0.5) * 600, 
                           y = 512 + (Math.random() - 0.5) * 400, 
-                          r = 120 + Math.random() * 250;
-                    
+                          r = 130 + Math.random() * 260;
                     const grad = ctx.createRadialGradient(x, y, 0, x, y, r);
-                    grad.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
-                    grad.addColorStop(0.4, 'rgba(255, 255, 255, 0.1)');
+                    grad.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+                    grad.addColorStop(0.5, 'rgba(255, 255, 255, 0.15)');
                     grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-                    
                     ctx.fillStyle = grad;
                     ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
                 }
-                
                 const cloudTexture = new THREE.CanvasTexture(canvas);
                 const cloudMaterial = new THREE.SpriteMaterial({ map: cloudTexture, transparent: true, opacity: 0.8, depthWrite: false });
                 const shadowGeo = new THREE.SphereGeometry(1, 16, 16);
@@ -405,13 +455,11 @@
                     sprite.position.set((Math.random() - 0.5) * 300, 30 + Math.random() * 20, (Math.random() - 0.5) * 200 - 30);
                     const scale = 40 + Math.random() * 60;
                     sprite.scale.set(scale, scale * 0.45, 1);
-                    
                     const caster = new THREE.Mesh(shadowGeo, shadowMat);
                     caster.position.copy(sprite.position);
                     caster.scale.set(scale * 0.4, scale * 0.1, scale * 0.4);
                     caster.castShadow = true;
                     sprite.userData.shadowCaster = caster;
-                    
                     this.cloudSprites.push(sprite);
                     this.scene.add(sprite);
                     this.scene.add(caster);
@@ -538,14 +586,10 @@
             fetchWeather(`/api/weather?city=${encodeURIComponent(city)}`);
         };
 
-        function getLocalWeather(lat, lon) {
-            fetchWeather(`/api/weather?lat=${lat}&lon=${lon}`);
-        }
-
         function updateDashboard(data) {
             state.weatherMain = data.weather[0].main;
             state.windSpeed = data.wind.speed;
-            state.timezoneOffset = data.timezone; // Offset from UTC in seconds
+            state.timezoneOffset = data.timezone;
 
             logToTerminal(`[DATA] Location: ${data.name}, ${data.sys.country}`);
             logToTerminal(`[DATA] Pressure: ${data.main.pressure}hPa`);
@@ -576,6 +620,29 @@
             DOM.uiCoords.textContent = `COORD: ${data.coord.lat.toFixed(3)}, ${data.coord.lon.toFixed(3)}`;
             DOM.uiIcon.innerHTML = `<i class="ph ${iconClass}"></i>`;
 
+            // Calculate Secondary Intel
+            const precipRisk = Math.min(100, Math.round((data.clouds.all * 0.7) + (data.main.humidity * 0.3)));
+            DOM.uiPrecipRisk.textContent = `${precipRisk}%`;
+            
+            // Mock UV Index based on weather/time
+            const hr = new Date().getHours();
+            const baseUV = (hr > 10 && hr < 16) ? 7 : 2;
+            const uv = Math.max(1, Math.round(baseUV * (state.weatherMain === 'Clear' ? 1.2 : 0.4)));
+            DOM.uiUV.textContent = uv;
+
+            // Wind Compass
+            const deg = data.wind.deg || 0;
+            DOM.uiWindCompass.style.transform = `rotate(${deg}deg)`;
+            const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+            DOM.uiWindDir.textContent = dirs[Math.round(deg / 22.5) % 16];
+
+            // Daylight Cycle
+            const now = Date.now() / 1000;
+            const total = data.sys.sunset - data.sys.sunrise;
+            const elapsed = now - data.sys.sunrise;
+            const dayProgress = Math.max(0, Math.min(100, (elapsed / total) * 100));
+            DOM.uiDayProgress.style.width = `${dayProgress}%`;
+
             DOM.weatherCard.classList.remove('opacity-0', 'scale-95');
             DOM.weatherCard.classList.add('opacity-100', 'scale-100');
             if(environmentSystem) environmentSystem.setMode(state.weatherMain, state.windSpeed);
@@ -593,7 +660,7 @@
             logToTerminal("[SYS] Scanning for local uplink...");
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
-                    (pos) => getLocalWeather(pos.coords.latitude, pos.coords.longitude),
+                    (pos) => fetchWeather(`/api/weather?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`),
                     () => searchCity('London')
                 );
             } else searchCity('London');
