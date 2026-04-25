@@ -18,7 +18,7 @@
         :root {
             --bg-color: #050505; 
             --neon-color: #ffd700; 
-            --card-bg: rgba(0, 0, 0, 0.4); 
+            --card-bg: rgba(0, 0, 0, 0.5); 
             --card-border: rgba(255, 255, 255, 0.15);
         }
 
@@ -64,11 +64,11 @@
         /* Glassmorphism */
         .glass-card {
             background: var(--card-bg);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
             border: 1px solid var(--card-border);
             border-radius: 12px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
             transition: all 0.5s ease;
         }
 
@@ -109,10 +109,10 @@
             <div class="w-full max-w-sm interactive group">
                 <form id="search-form" class="glass-card neon-border flex items-center p-2 px-4 transition-all hover:bg-white/5">
                     <i class="ph ph-magnifying-glass text-xl text-white/70"></i>
-                    <input type="text" id="city-input" placeholder="SCAN LOCATION..." 
+                    <input type="text" id="city-input" placeholder="SEARCH LOCATION..." 
                            class="w-full bg-transparent border-none text-white px-3 py-2 placeholder-white/30 font-mono text-xs uppercase tracking-widest drop-shadow-md">
                     <button type="submit" class="text-xs font-bold neon-text hover:opacity-80 transition-opacity">
-                        EXE
+                        SCAN
                     </button>
                 </form>
                 <div id="error-msg" class="mt-2 hidden">
@@ -123,6 +123,7 @@
             <!-- Chronograph / Clock -->
             <div class="glass-card p-3 px-6 text-right interactive hidden md:block">
                 <p id="ui-clock" class="text-xl font-bold tracking-widest drop-shadow-md">00:00:00</p>
+                <p id="ui-city-time-label" class="text-[8px] text-white/30 uppercase tracking-[0.2em] -mt-1">City Local Time</p>
                 <p id="ui-coords" class="text-[9px] text-white/40 tracking-tighter mt-1 uppercase">COORD: 00.000, 00.000</p>
             </div>
         </div>
@@ -147,7 +148,7 @@
                 <div class="flex justify-between items-start mb-8">
                     <div>
                         <h1 id="ui-city" class="text-4xl md:text-5xl font-bold tracking-tighter mb-1 drop-shadow-md">CITY</h1>
-                        <p id="ui-country" class="text-white/50 text-xs tracking-widest drop-shadow-sm uppercase">STATION ID: --</p>
+                        <p id="ui-location-full" class="text-white/60 text-xs tracking-widest drop-shadow-sm uppercase">LOCATION SYNCING...</p>
                     </div>
                     <div id="ui-icon" class="text-5xl neon-text">
                         <i class="ph ph-circle-dashed animate-spin"></i>
@@ -163,12 +164,12 @@
                         <p id="ui-desc" class="text-sm uppercase tracking-[0.3em] neon-text mt-2 font-bold">Atmospheric Syncing</p>
                     </div>
                     <div class="text-right">
-                        <p class="text-[10px] text-white/40 uppercase">Feels Like</p>
+                        <p class="text-[10px] text-white/40 uppercase tracking-widest">Feels Like</p>
                         <p id="ui-feels" class="text-2xl font-bold">--°</p>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-8 border-t border-white/10 pt-8">
+                <div class="grid grid-cols-2 gap-y-8 gap-x-8 border-t border-white/10 pt-8">
                     <div class="flex items-center space-x-4">
                         <i class="ph ph-wind text-2xl text-white/60"></i>
                         <div>
@@ -177,10 +178,24 @@
                         </div>
                     </div>
                     <div class="flex items-center space-x-4">
+                        <i class="ph ph-drop text-2xl text-white/60"></i>
+                        <div>
+                            <p class="text-[9px] text-white/40 uppercase tracking-widest">Humidity</p>
+                            <p id="ui-humidity" class="text-lg font-bold">-- %</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
                         <i class="ph ph-gauge text-2xl text-white/60"></i>
                         <div>
                             <p class="text-[9px] text-white/40 uppercase tracking-widest">Pressure</p>
                             <p id="ui-pressure" class="text-lg font-bold">-- hPa</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <i class="ph ph-eye text-2xl text-white/60"></i>
+                        <div>
+                            <p class="text-[9px] text-white/40 uppercase tracking-widest">Visibility</p>
+                            <p id="ui-visibility" class="text-lg font-bold">-- km</p>
                         </div>
                     </div>
                 </div>
@@ -208,7 +223,7 @@
                 </button>
                 <div class="h-4 w-px bg-white/10"></div>
                 <div class="text-[10px] text-white/30 tracking-[0.2em] uppercase">
-                    AetherWeather <span class="mx-2">|</span> v2.5 Command Center
+                    AetherWeather <span class="mx-2">|</span> v3.0 Digital Atmospheric Center
                 </div>
             </div>
         </div>
@@ -224,6 +239,7 @@
         const state = {
             weatherMain: 'Clear',
             windSpeed: 0,
+            timezoneOffset: 0, // In seconds from UTC
             mouse: new THREE.Vector2(0, 0),
             targetSkyColor: new THREE.Color(0x5ca0d3),
             targetGroundColor: new THREE.Color(0x2e4a22),
@@ -239,13 +255,14 @@
             errorText: document.getElementById('error-text'),
             weatherCard: document.getElementById('weather-card'),
             uiCity: document.getElementById('ui-city'),
-            uiCountry: document.getElementById('ui-country'),
+            uiLocationFull: document.getElementById('ui-location-full'),
             uiTemp: document.getElementById('ui-temp'),
             uiFeels: document.getElementById('ui-feels'),
             uiPressure: document.getElementById('ui-pressure'),
             uiDesc: document.getElementById('ui-desc'),
             uiWind: document.getElementById('ui-wind'),
             uiHumidity: document.getElementById('ui-humidity'),
+            uiVisibility: document.getElementById('ui-visibility'),
             uiIcon: document.getElementById('ui-icon'),
             uiClock: document.getElementById('ui-clock'),
             uiCoords: document.getElementById('ui-coords'),
@@ -263,10 +280,15 @@
             if (DOM.terminalLog.children.length > 30) DOM.terminalLog.lastChild.remove();
         }
 
-        // Clock Update
+        // Clock Update (Using city local time)
         function updateClock() {
+            // Get current UTC time
             const now = new Date();
-            DOM.uiClock.textContent = now.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
+            // Add searched city offset
+            const cityTime = new Date(utcTime + (state.timezoneOffset * 1000));
+            
+            DOM.uiClock.textContent = cityTime.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
             requestAnimationFrame(updateClock);
         }
 
@@ -338,11 +360,11 @@
             }
 
             createGround() {
-                const geometry = new THREE.PlaneGeometry(400, 400, 100, 100);
+                const geometry = new THREE.PlaneGeometry(400, 400, 128, 128); // Increased segments for smoothness
                 const positions = geometry.attributes.position.array;
                 for (let i = 0; i < positions.length; i += 3) {
                     const x = positions[i], y = positions[i + 1];
-                    positions[i + 2] = Math.sin(x * 0.05) * Math.cos(y * 0.05) * 8 + (Math.random() - 0.5) * 0.5;
+                    positions[i + 2] = Math.sin(x * 0.05) * Math.cos(y * 0.05) * 8 + (Math.random() - 0.5) * 0.3;
                 }
                 geometry.computeVertexNormals();
                 const material = new THREE.MeshStandardMaterial({ color: 0x2e4a22, roughness: 0.8, flatShading: false });
@@ -355,31 +377,41 @@
 
             createClouds() {
                 const canvas = document.createElement('canvas');
-                canvas.width = 512; canvas.height = 512;
+                canvas.width = 1024; canvas.height = 1024; // High-res texture
                 const ctx = canvas.getContext('2d');
-                for (let i = 0; i < 40; i++) {
-                    const x = 256 + (Math.random() - 0.5) * 350, y = 256 + (Math.random() - 0.5) * 200, r = 80 + Math.random() * 150;
+                
+                // Better cloud procedural generation: super soft layered radial gradients
+                for (let i = 0; i < 60; i++) {
+                    const x = 512 + (Math.random() - 0.5) * 600, 
+                          y = 512 + (Math.random() - 0.5) * 400, 
+                          r = 120 + Math.random() * 250;
+                    
                     const grad = ctx.createRadialGradient(x, y, 0, x, y, r);
-                    grad.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+                    grad.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+                    grad.addColorStop(0.4, 'rgba(255, 255, 255, 0.1)');
                     grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                    
                     ctx.fillStyle = grad;
                     ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
                 }
+                
                 const cloudTexture = new THREE.CanvasTexture(canvas);
                 const cloudMaterial = new THREE.SpriteMaterial({ map: cloudTexture, transparent: true, opacity: 0.8, depthWrite: false });
-                const shadowGeo = new THREE.SphereGeometry(1, 12, 12);
+                const shadowGeo = new THREE.SphereGeometry(1, 16, 16);
                 const shadowMat = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false });
 
-                for(let i = 0; i < 50; i++) {
+                for(let i = 0; i < 60; i++) {
                     const sprite = new THREE.Sprite(cloudMaterial.clone());
-                    sprite.position.set((Math.random() - 0.5) * 200, 25 + Math.random() * 25, (Math.random() - 0.5) * 150 - 20);
-                    const scale = 30 + Math.random() * 40;
-                    sprite.scale.set(scale, scale * 0.5, 1);
+                    sprite.position.set((Math.random() - 0.5) * 300, 30 + Math.random() * 20, (Math.random() - 0.5) * 200 - 30);
+                    const scale = 40 + Math.random() * 60;
+                    sprite.scale.set(scale, scale * 0.45, 1);
+                    
                     const caster = new THREE.Mesh(shadowGeo, shadowMat);
                     caster.position.copy(sprite.position);
                     caster.scale.set(scale * 0.4, scale * 0.1, scale * 0.4);
                     caster.castShadow = true;
                     sprite.userData.shadowCaster = caster;
+                    
                     this.cloudSprites.push(sprite);
                     this.scene.add(sprite);
                     this.scene.add(caster);
@@ -387,7 +419,7 @@
             }
 
             createPrecipitation() {
-                this.particleCount = 4000;
+                this.particleCount = 5000;
                 const geometry = new THREE.BufferGeometry();
                 const positions = new Float32Array(this.particleCount * 3);
                 for (let i = 0; i < this.particleCount; i++) {
@@ -438,8 +470,8 @@
                 const windEffect = windSpeed * 0.1;
                 this.cloudSprites.forEach(s => {
                     s.position.x += windEffect * dt * 5;
-                    if (s.position.x > 120) s.position.x = -120;
-                    if (s.position.x < -120) s.position.x = 120;
+                    if (s.position.x > 150) s.position.x = -150;
+                    if (s.position.x < -150) s.position.x = 150;
                     if(s.userData.shadowCaster) s.userData.shadowCaster.position.copy(s.position);
                 });
                 if (this.precipMaterial.opacity > 0) {
@@ -513,6 +545,7 @@
         function updateDashboard(data) {
             state.weatherMain = data.weather[0].main;
             state.windSpeed = data.wind.speed;
+            state.timezoneOffset = data.timezone; // Offset from UTC in seconds
 
             logToTerminal(`[DATA] Location: ${data.name}, ${data.sys.country}`);
             logToTerminal(`[DATA] Pressure: ${data.main.pressure}hPa`);
@@ -532,10 +565,12 @@
             document.body.className = themeClass;
             
             DOM.uiCity.textContent = data.name.toUpperCase();
-            DOM.uiCountry.textContent = `STATION ID: ${data.sys.country}-${data.id.toString().slice(-4)}`;
+            DOM.uiLocationFull.textContent = `${data.name}, ${data.sys.country}`;
             DOM.uiTemp.textContent = Math.round(data.main.temp);
             DOM.uiFeels.textContent = `${Math.round(data.main.feels_like)}°`;
             DOM.uiPressure.textContent = `${data.main.pressure} hPa`;
+            DOM.uiHumidity.textContent = `${data.main.humidity}%`;
+            DOM.uiVisibility.textContent = `${(data.visibility / 1000).toFixed(1)} km`;
             DOM.uiDesc.textContent = data.weather[0].description;
             DOM.uiWind.textContent = `${data.wind.speed.toFixed(1)} m/s`;
             DOM.uiCoords.textContent = `COORD: ${data.coord.lat.toFixed(3)}, ${data.coord.lon.toFixed(3)}`;
