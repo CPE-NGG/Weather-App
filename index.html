@@ -8,7 +8,7 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Google Fonts: Space Mono for Terminal Feel -->
+    <!-- Google Fonts: Space Mono -->
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     
     <!-- Phosphor Icons -->
@@ -22,7 +22,6 @@
             --card-border: rgba(255, 255, 255, 0.15);
         }
 
-        /* Theme Overrides applied via JS */
         body.theme-rain { --neon-color: #00ffff; } 
         body.theme-thunder { --neon-color: #b026ff; } 
         body.theme-snow { --neon-color: #ffffff; } 
@@ -61,7 +60,6 @@
             pointer-events: auto;
         }
 
-        /* Glassmorphism */
         .glass-card {
             background: var(--card-bg);
             backdrop-filter: blur(14px);
@@ -83,7 +81,6 @@
             text-shadow: 0 0 8px var(--neon-color);
         }
 
-        /* Terminal Sidebar Styling */
         #terminal-log::-webkit-scrollbar { width: 2px; }
         #terminal-log::-webkit-scrollbar-thumb { background: var(--neon-color); }
 
@@ -112,41 +109,39 @@
         
         <!-- Top Section -->
         <div class="flex justify-between items-start w-full">
-            <!-- Search Bar -->
             <div class="w-full max-w-sm interactive group">
                 <form id="search-form" class="glass-card neon-border flex items-center p-2 px-4 transition-all hover:bg-white/5">
                     <i class="ph ph-magnifying-glass text-xl text-white/70"></i>
                     <input type="text" id="city-input" placeholder="SEARCH LOCATION..." 
                            class="w-full bg-transparent border-none text-white px-3 py-2 placeholder-white/30 font-mono text-xs uppercase tracking-widest drop-shadow-md">
                     <button type="submit" class="text-xs font-bold neon-text hover:opacity-80 transition-opacity">
-                        SCAN
+                        SEARCH
                     </button>
                 </form>
                 <div id="error-msg" class="mt-2 hidden">
-                    <span id="error-text" class="text-red-400 text-[10px] uppercase tracking-tighter">ERR: Target unreachable.</span>
+                    <span id="error-text" class="text-red-400 text-[10px] uppercase tracking-tighter">ERR: Location not found.</span>
                 </div>
             </div>
 
-            <!-- Chronograph / Clock -->
             <div class="glass-card p-3 px-6 text-right interactive hidden md:block">
                 <p id="ui-clock" class="text-xl font-bold tracking-widest drop-shadow-md">00:00:00</p>
                 <p id="ui-city-time-label" class="text-[8px] text-white/30 uppercase tracking-[0.2em] -mt-1">City Local Time</p>
-                <p id="ui-coords" class="text-[9px] text-white/40 tracking-tighter mt-1 uppercase">COORD: 00.000, 00.000</p>
+                <p id="ui-coords" class="text-[9px] text-white/40 tracking-tighter mt-1 uppercase">LOC: 00.000, 00.000</p>
             </div>
         </div>
 
-        <!-- Middle Section: Left Terminal, Main Card, Right Diagnostics -->
+        <!-- Middle Section -->
         <div class="flex flex-grow items-center justify-between mt-4 overflow-hidden gap-6">
             
             <!-- LEFT: Terminal Feed -->
-            <div id="terminal-sidebar" class="hidden lg:flex flex-col h-[60vh] w-64 glass-card p-4 interactive self-center">
+            <div id="terminal-sidebar" class="hidden lg:flex flex-col h-[60vh] w-72 glass-card p-4 interactive self-center">
                 <div class="flex items-center space-x-2 mb-3 border-b border-white/10 pb-2">
                     <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                    <span class="text-[10px] uppercase tracking-widest text-white/60">Atmospheric Stream</span>
+                    <span class="text-lg font-bold uppercase tracking-widest text-white/90">Weather Updates</span>
                 </div>
                 <div id="terminal-log" class="flex-grow overflow-y-auto font-mono text-[9px] space-y-1 text-white/40 leading-tight">
-                    <p class="text-white/20">[SYS] Aether OS Initialized...</p>
-                    <p class="text-white/20">[SYS] Ready for input.</p>
+                    <p class="text-white/20">[SYS] Weather System Active...</p>
+                    <p class="text-white/20">[SYS] Ready for search.</p>
                 </div>
             </div>
 
@@ -155,7 +150,7 @@
                 <div class="flex justify-between items-start mb-8">
                     <div>
                         <h1 id="ui-city" class="text-4xl md:text-5xl font-bold tracking-tighter mb-1 drop-shadow-md">CITY</h1>
-                        <p id="ui-location-full" class="text-white/80 text-xs tracking-widest drop-shadow-sm uppercase font-bold">LOCATION SYNCING...</p>
+                        <p id="ui-location-full" class="text-white/80 text-xs tracking-widest drop-shadow-sm uppercase font-bold">UPDATING...</p>
                     </div>
                     <div id="ui-icon" class="text-5xl neon-text">
                         <i class="ph ph-circle-dashed animate-spin"></i>
@@ -168,7 +163,7 @@
                             <span id="ui-temp" class="drop-shadow-md">--</span>
                             <span class="text-3xl md:text-4xl text-white/50 mt-2 ml-1">°C</span>
                         </div>
-                        <p id="ui-desc" class="text-sm uppercase tracking-[0.3em] neon-text mt-2 font-bold">Atmospheric Syncing</p>
+                        <p id="ui-desc" class="text-sm uppercase tracking-[0.3em] neon-text mt-2 font-bold">Synchronizing...</p>
                     </div>
                     <div class="text-right">
                         <p class="text-[10px] text-white/40 uppercase tracking-widest">Feels Like</p>
@@ -180,7 +175,7 @@
                     <div class="flex items-center space-x-4">
                         <i class="ph ph-wind text-2xl text-white/70"></i>
                         <div>
-                            <p class="text-[9px] text-white/50 uppercase tracking-widest">Wind Velocity</p>
+                            <p class="text-[9px] text-white/50 uppercase tracking-widest">Wind Speed</p>
                             <p id="ui-wind" class="text-lg font-bold">-- m/s</p>
                         </div>
                     </div>
@@ -208,15 +203,14 @@
                 </div>
             </div>
 
-            <!-- RIGHT: Strategic Diagnostics -->
-            <div id="diagnostics-sidebar" class="hidden lg:flex flex-col h-[60vh] w-64 glass-card p-5 interactive self-center">
+            <!-- RIGHT: Simplified Diagnostics -->
+            <div id="diagnostics-sidebar" class="hidden lg:flex flex-col h-[60vh] w-72 glass-card p-5 interactive self-center">
                 <div class="flex items-center space-x-2 mb-4 border-b border-white/10 pb-2">
                     <i class="ph ph-activity text-white/60"></i>
-                    <span class="text-[10px] uppercase tracking-widest text-white/60">Strategic Intel</span>
+                    <span class="text-lg font-bold uppercase tracking-widest text-white/90">Weather Info</span>
                 </div>
                 
                 <div class="space-y-6 flex-grow">
-                    <!-- Sunlight Cycle -->
                     <div>
                         <div class="flex justify-between text-[9px] uppercase tracking-widest text-white/40 mb-2">
                             <span>Daylight Cycle</span>
@@ -227,37 +221,34 @@
                         </div>
                     </div>
 
-                    <!-- Environment Risk Gauges -->
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <p class="text-[8px] text-white/30 uppercase mb-1">Precip Risk</p>
+                            <p class="text-[8px] text-white/30 uppercase mb-1">Rain Chance</p>
                             <p id="ui-precip-risk" class="text-sm font-bold neon-text">--%</p>
                         </div>
                         <div>
-                            <p class="text-[8px] text-white/30 uppercase mb-1">UV Index</p>
+                            <p class="text-[8px] text-white/30 uppercase mb-1">Sun Strength</p>
                             <p id="ui-uv" class="text-sm font-bold neon-text">--</p>
                         </div>
                     </div>
 
-                    <!-- Wind Vector -->
                     <div class="flex items-center space-x-3 pt-2 border-t border-white/5">
                         <div class="relative w-10 h-10 border border-white/10 rounded-full flex items-center justify-center">
                             <i id="ui-wind-compass" class="ph ph-arrow-up text-lg transition-transform duration-1000"></i>
                         </div>
                         <div>
-                            <p class="text-[8px] text-white/30 uppercase">Wind Vector</p>
+                            <p class="text-[8px] text-white/30 uppercase">Wind Direction</p>
                             <p id="ui-wind-dir" class="text-[10px] font-bold">CALCULATING</p>
                         </div>
                     </div>
 
-                    <!-- System Status -->
                     <div class="mt-auto pt-4 space-y-2">
                         <div class="flex justify-between text-[8px] text-white/20 uppercase tracking-tighter">
-                            <span>Signal Integrity</span>
-                            <span class="text-green-500">98.2%</span>
+                            <span>Connection</span>
+                            <span class="text-green-500">EXCELLENT</span>
                         </div>
                         <div class="flex justify-between text-[8px] text-white/20 uppercase tracking-tighter">
-                            <span>Aether Buffer</span>
+                            <span>System Status</span>
                             <span>ACTIVE</span>
                         </div>
                     </div>
@@ -266,9 +257,8 @@
 
         </div>
 
-        <!-- Bottom Section: Utility Dock -->
+        <!-- Bottom Section -->
         <div id="utility-dock" class="w-full flex flex-col md:flex-row justify-between items-center mt-6 space-y-4 md:space-y-0 interactive">
-            <!-- Quick Locations -->
             <div class="flex space-x-2 text-[9px] font-bold tracking-widest">
                 <button onclick="searchCity('Tokyo')" class="px-3 py-2 glass-card hover:border-white/40 transition-colors uppercase">Tokyo</button>
                 <button onclick="searchCity('London')" class="px-3 py-2 glass-card hover:border-white/40 transition-colors uppercase">London</button>
@@ -283,7 +273,7 @@
                 </button>
                 <div class="h-4 w-px bg-white/10"></div>
                 <div class="text-[10px] text-white/30 tracking-[0.2em] uppercase font-bold">
-                    AetherWeather <span class="mx-2">|</span> v3.5 Strategic Atmos Center
+                    AetherWeather <span class="mx-2">|</span> Visual Dashboard v4.1
                 </div>
             </div>
         </div>
@@ -301,7 +291,8 @@
             targetGroundColor: new THREE.Color(0x2e4a22),
             targetFogDensity: 0.005,
             targetAmbient: 0.7,
-            cinemaMode: false
+            cinemaMode: false,
+            isNight: false
         };
 
         const DOM = {
@@ -331,6 +322,9 @@
             uiWindDir: document.getElementById('ui-wind-dir')
         };
 
+        // For full country name conversion
+        const regionNames = new Intl.DisplayNames(['en'], {type: 'region'});
+
         function logToTerminal(msg, type = 'info') {
             const time = new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
             const p = document.createElement('p');
@@ -345,6 +339,14 @@
             const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
             const cityTime = new Date(utcTime + (state.timezoneOffset * 1000));
             DOM.uiClock.textContent = cityTime.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            
+            const hour = cityTime.getHours();
+            const wasNight = state.isNight;
+            state.isNight = (hour < 6 || hour >= 18);
+            
+            if (wasNight !== state.isNight) {
+                if (environmentSystem) environmentSystem.setMode(state.weatherMain, state.windSpeed);
+            }
             requestAnimationFrame(updateClock);
         }
 
@@ -352,11 +354,11 @@
             state.cinemaMode = !state.cinemaMode;
             const elements = [DOM.searchForm.parentElement, document.getElementById('terminal-sidebar'), document.getElementById('diagnostics-sidebar'), DOM.weatherCard, document.getElementById('ui-clock').parentElement];
             elements.forEach(el => el.classList.toggle('ui-hidden', state.cinemaMode));
-            logToTerminal(state.cinemaMode ? "[SYS] Entering Cinema Mode." : "[SYS] UI Restored.");
+            logToTerminal(state.cinemaMode ? "[SYS] Entering Cinema Mode." : "[SYS] View Restored.");
         });
 
         // ==========================================
-        // 2. 3D ENVIRONMENT
+        // 3D ENVIRONMENT
         // ==========================================
         let scene, camera, renderer, environmentSystem;
         let clock = new THREE.Clock();
@@ -395,34 +397,33 @@
             constructor(scene) {
                 this.scene = scene;
                 this.cloudSprites = [];
+                this.birds = [];
                 this.ambientLight = new THREE.AmbientLight(0xffffff, 0.35);
                 this.scene.add(this.ambientLight);
                 this.dirLight = new THREE.DirectionalLight(0xfff5b6, 1.2);
-                this.dirLight.position.set(100, 100, 50);
+                this.dirLight.position.set(80, 100, 50);
                 this.dirLight.castShadow = true;
+                // High res shadows for the tiny flowers
                 this.dirLight.shadow.mapSize.width = 2048;
                 this.dirLight.shadow.mapSize.height = 2048;
                 this.dirLight.shadow.camera.far = 400;
-                this.dirLight.shadow.camera.left = -200;
-                this.dirLight.shadow.camera.right = 200;
-                this.dirLight.shadow.camera.top = 200;
-                this.dirLight.shadow.camera.bottom = -200;
+                this.dirLight.shadow.camera.left = -150;
+                this.dirLight.shadow.camera.right = 150;
+                this.dirLight.shadow.camera.top = 150;
+                this.dirLight.shadow.camera.bottom = -150;
                 this.scene.add(this.dirLight);
+                
                 this.createGround();
+                this.createNature();
                 this.createClouds();
                 this.createPrecipitation();
+                this.createBirds();
                 this.setMode('Clear', 0);
             }
 
             createGround() {
-                const geometry = new THREE.PlaneGeometry(400, 400, 128, 128);
-                const positions = geometry.attributes.position.array;
-                for (let i = 0; i < positions.length; i += 3) {
-                    const x = positions[i], y = positions[i + 1];
-                    positions[i + 2] = Math.sin(x * 0.05) * Math.cos(y * 0.05) * 8 + (Math.random() - 0.5) * 0.2;
-                }
-                geometry.computeVertexNormals();
-                const material = new THREE.MeshStandardMaterial({ color: 0x2e4a22, roughness: 0.8, flatShading: false });
+                const geometry = new THREE.PlaneGeometry(400, 400, 32, 32);
+                const material = new THREE.MeshStandardMaterial({ color: 0x2e4a22, roughness: 0.9 });
                 this.ground = new THREE.Mesh(geometry, material);
                 this.ground.rotation.x = -Math.PI / 2;
                 this.ground.position.y = -5;
@@ -430,106 +431,190 @@
                 this.scene.add(this.ground);
             }
 
+            createNature() {
+                // Better Trees: Stacked cones for a lush look
+                const trunkMat = new THREE.MeshStandardMaterial({ color: 0x4d2926 });
+                const leafMat = new THREE.MeshStandardMaterial({ color: 0x2d5a27 });
+
+                for (let i = 0; i < 40; i++) {
+                    const treeGroup = new THREE.Group();
+                    const tx = (Math.random() - 0.5) * 240;
+                    const tz = (Math.random() - 0.5) * 240;
+                    
+                    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.8, 5, 6), trunkMat);
+                    trunk.position.y = 2.5;
+                    trunk.castShadow = true;
+                    treeGroup.add(trunk);
+
+                    // Three layers of leaves
+                    for(let j=0; j<3; j++) {
+                        const cone = new THREE.Mesh(new THREE.ConeGeometry(4 - j, 6, 6), leafMat);
+                        cone.position.y = 7 + (j * 3);
+                        cone.castShadow = true;
+                        treeGroup.add(cone);
+                    }
+
+                    treeGroup.position.set(tx, -5, tz);
+                    treeGroup.scale.setScalar(0.8 + Math.random() * 0.4);
+                    this.scene.add(treeGroup);
+                }
+
+                // Flowers with Shadows
+                const colors = [0xff66bb, 0xffff66, 0x66ffff, 0xffffff, 0xffa500];
+                const flowerGeo = new THREE.SphereGeometry(0.4, 4, 4);
+                const stemGeo = new THREE.CylinderGeometry(0.1, 0.1, 1, 4);
+                
+                for (let i = 0; i < 180; i++) {
+                    const flowerGroup = new THREE.Group();
+                    const fx = (Math.random() - 0.5) * 260;
+                    const fz = (Math.random() - 0.5) * 260;
+                    
+                    const stem = new THREE.Mesh(stemGeo, leafMat);
+                    stem.position.y = 0.5;
+                    stem.castShadow = true;
+                    flowerGroup.add(stem);
+
+                    const bloom = new THREE.Mesh(flowerGeo, new THREE.MeshStandardMaterial({ color: colors[Math.floor(Math.random()*colors.length)] }));
+                    bloom.position.y = 1;
+                    bloom.castShadow = true;
+                    flowerGroup.add(bloom);
+
+                    flowerGroup.position.set(fx, -5, fz);
+                    this.scene.add(flowerGroup);
+                }
+            }
+
+            createBirds() {
+                // Better Birds: Body + Wings
+                for(let i=0; i<10; i++) {
+                    const birdGroup = new THREE.Group();
+                    
+                    const body = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.3, 0.3), new THREE.MeshStandardMaterial({ color: 0x000000 }));
+                    birdGroup.add(body);
+
+                    const wingL = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.05, 1.8), new THREE.MeshStandardMaterial({ color: 0x000000 }));
+                    wingL.position.x = 0;
+                    wingL.name = "wingL";
+                    birdGroup.add(wingL);
+
+                    const wingR = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.05, 1.8), new THREE.MeshStandardMaterial({ color: 0x000000 }));
+                    wingR.position.x = 0;
+                    wingR.name = "wingR";
+                    birdGroup.add(wingR);
+
+                    birdGroup.position.set((Math.random()-0.5)*150, 20 + Math.random()*25, (Math.random()-0.5)*150);
+                    birdGroup.userData.speed = 0.4 + Math.random() * 0.6;
+                    birdGroup.userData.radius = 40 + Math.random() * 60;
+                    birdGroup.userData.angle = Math.random() * Math.PI * 2;
+                    birdGroup.userData.verticalOffset = Math.random() * 100;
+                    
+                    this.birds.push(birdGroup);
+                    this.scene.add(birdGroup);
+                }
+            }
+
             createClouds() {
                 const canvas = document.createElement('canvas');
-                canvas.width = 1024; canvas.height = 1024;
+                canvas.width = 512; canvas.height = 512;
                 const ctx = canvas.getContext('2d');
-                for (let i = 0; i < 70; i++) {
-                    const x = 512 + (Math.random() - 0.5) * 600, 
-                          y = 512 + (Math.random() - 0.5) * 400, 
-                          r = 130 + Math.random() * 260;
-                    const grad = ctx.createRadialGradient(x, y, 0, x, y, r);
-                    grad.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
-                    grad.addColorStop(0.5, 'rgba(255, 255, 255, 0.15)');
-                    grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-                    ctx.fillStyle = grad;
-                    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
-                }
+                const grad = ctx.createRadialGradient(256, 256, 0, 256, 256, 256);
+                grad.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+                grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                ctx.fillStyle = grad;
+                ctx.beginPath(); ctx.arc(256, 256, 256, 0, Math.PI*2); ctx.fill();
+                
                 const cloudTexture = new THREE.CanvasTexture(canvas);
-                const cloudMaterial = new THREE.SpriteMaterial({ map: cloudTexture, transparent: true, opacity: 0.8, depthWrite: false });
-                const shadowGeo = new THREE.SphereGeometry(1, 16, 16);
-                const shadowMat = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false });
+                const cloudMaterial = new THREE.SpriteMaterial({ map: cloudTexture, transparent: true, opacity: 0.4, depthWrite: false });
 
-                for(let i = 0; i < 60; i++) {
+                for(let i = 0; i < 35; i++) {
                     const sprite = new THREE.Sprite(cloudMaterial.clone());
-                    sprite.position.set((Math.random() - 0.5) * 300, 30 + Math.random() * 20, (Math.random() - 0.5) * 200 - 30);
-                    const scale = 40 + Math.random() * 60;
-                    sprite.scale.set(scale, scale * 0.45, 1);
-                    const caster = new THREE.Mesh(shadowGeo, shadowMat);
-                    caster.position.copy(sprite.position);
-                    caster.scale.set(scale * 0.4, scale * 0.1, scale * 0.4);
-                    caster.castShadow = true;
-                    sprite.userData.shadowCaster = caster;
+                    sprite.position.set((Math.random() - 0.5) * 300, 40 + Math.random() * 15, (Math.random() - 0.5) * 200);
+                    const scale = 60 + Math.random() * 100;
+                    sprite.scale.set(scale, scale * 0.35, 1);
                     this.cloudSprites.push(sprite);
                     this.scene.add(sprite);
-                    this.scene.add(caster);
                 }
             }
 
             createPrecipitation() {
-                this.particleCount = 5000;
+                this.particleCount = 3500;
                 const geometry = new THREE.BufferGeometry();
                 const positions = new Float32Array(this.particleCount * 3);
                 for (let i = 0; i < this.particleCount; i++) {
-                    positions[i * 3] = (Math.random() - 0.5) * 150;
-                    positions[i * 3 + 1] = Math.random() * 80;
-                    positions[i * 3 + 2] = (Math.random() - 0.5) * 150;
+                    positions[i * 3] = (Math.random() - 0.5) * 200;
+                    positions[i * 3 + 1] = Math.random() * 100;
+                    positions[i * 3 + 2] = (Math.random() - 0.5) * 200;
                 }
                 geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-                const canvas = document.createElement('canvas');
-                canvas.width = 16; canvas.height = 32;
-                const ctx = canvas.getContext('2d');
-                const gradient = ctx.createLinearGradient(0, 0, 0, 32);
-                gradient.addColorStop(0.5, 'rgba(255,255,255,1)'); gradient.addColorStop(1, 'rgba(255,255,255,0)');
-                ctx.fillStyle = gradient; ctx.fillRect(7, 0, 2, 32);
-                this.precipMaterial = new THREE.PointsMaterial({ size: 1.2, map: new THREE.CanvasTexture(canvas), transparent: true, opacity: 0.0, depthWrite: false, blending: THREE.AdditiveBlending });
+                this.precipMaterial = new THREE.PointsMaterial({ size: 0.4, color: 0xffffff, transparent: true, opacity: 0.0, depthWrite: false });
                 this.precipitationPoints = new THREE.Points(geometry, this.precipMaterial);
                 this.scene.add(this.precipitationPoints);
             }
 
             setMode(weatherMain, windSpeed) {
-                let cloudColor = 0xffffff, cloudOpacity = 0.8, rainOpacity = 0.0, rainSpeed = 0, rainColor = 0x00ffff;
-                if (['Rain', 'Drizzle'].includes(weatherMain)) {
-                    state.targetSkyColor.setHex(0x2a3544); state.targetFogDensity = 0.02; state.targetGroundColor.setHex(0x151b22);
-                    state.targetAmbient = 0.4; this.dirLight.intensity = 0.1; cloudColor = 0x4a5568; rainOpacity = 0.5; rainSpeed = 40;
-                } else if (weatherMain === 'Thunderstorm') {
-                    state.targetSkyColor.setHex(0x050508); state.targetFogDensity = 0.03; state.targetGroundColor.setHex(0x050508);
-                    state.targetAmbient = 0.2; this.dirLight.intensity = 0.0; cloudColor = 0x111115; rainOpacity = 0.7; rainSpeed = 50; rainColor = 0xb026ff;
-                } else if (weatherMain === 'Snow') {
-                    state.targetSkyColor.setHex(0x8899aa); state.targetFogDensity = 0.02; state.targetGroundColor.setHex(0xccd6e0);
-                    state.targetAmbient = 0.5; this.dirLight.intensity = 0.2; cloudColor = 0xffffff; rainOpacity = 0.6; rainSpeed = 5; rainColor = 0xffffff;
-                } else if (weatherMain === 'Clouds') {
-                    state.targetSkyColor.setHex(0x5c6b7a); state.targetFogDensity = 0.015; state.targetGroundColor.setHex(0x223026);
-                    state.targetAmbient = 0.6; this.dirLight.intensity = 0.2; cloudColor = 0xaaaaaa;
-                } else if (['Mist', 'Fog', 'Haze', 'Dust', 'Smoke'].includes(weatherMain)) {
-                    state.targetSkyColor.setHex(0xc2b2a1); state.targetFogDensity = 0.02; state.targetGroundColor.setHex(0x4a4238);
-                    state.targetAmbient = 0.6; this.dirLight.intensity = 0.1; cloudColor = 0xe0d6c8; cloudOpacity = 0.6;
-                } else {
-                    state.targetSkyColor.setHex(0x5ca0d3); state.targetFogDensity = 0.005; state.targetGroundColor.setHex(0x2e4a22);
-                    state.targetAmbient = 0.35; this.dirLight.intensity = 1.2; cloudColor = 0xffffff; cloudOpacity = 0.4;
+                let cloudColor = 0xffffff, cloudOpacity = 0.4, rainOpacity = 0.0, rainSpeed = 0;
+                let skyColor = 0x5ca0d3, groundColor = 0x2e4a22, ambientVal = 0.35, dirInt = 1.2;
+
+                if (state.isNight) {
+                    skyColor = 0x05081a; groundColor = 0x0a140a; ambientVal = 0.15; dirInt = 0.2;
                 }
+
+                if (['Rain', 'Drizzle'].includes(weatherMain)) {
+                    skyColor = state.isNight ? 0x02040d : 0x2a3544; groundColor = 0x151b22;
+                    ambientVal = 0.3; dirInt = 0.1; cloudColor = 0x4a5568; rainOpacity = 0.5; rainSpeed = 40;
+                } else if (weatherMain === 'Thunderstorm') {
+                    skyColor = 0x050508; groundColor = 0x050508;
+                    ambientVal = 0.2; dirInt = 0.0; cloudColor = 0x111115; rainOpacity = 0.7; rainSpeed = 50;
+                } else if (weatherMain === 'Snow') {
+                    skyColor = 0x8899aa; groundColor = 0xccd6e0;
+                    ambientVal = 0.5; dirInt = 0.2; cloudColor = 0xffffff; rainOpacity = 0.6; rainSpeed = 5;
+                } else if (weatherMain === 'Clouds') {
+                    skyColor = state.isNight ? 0x080c14 : 0x5c6b7a; groundColor = 0x223026;
+                    ambientVal = 0.4; dirInt = 0.3; cloudColor = 0xaaaaaa;
+                }
+
+                state.targetSkyColor.setHex(skyColor);
+                state.targetGroundColor.setHex(groundColor);
+                state.targetAmbient = ambientVal;
+                this.dirLight.intensity = dirInt;
                 this.precipMaterial.opacity = rainOpacity;
-                this.precipMaterial.color.setHex(rainColor);
                 this.currentRainSpeed = rainSpeed;
                 this.cloudSprites.forEach(s => { s.material.color.setHex(cloudColor); s.material.opacity = cloudOpacity; });
+                
+                const showBirds = !['Rain', 'Thunderstorm', 'Snow'].includes(weatherMain) && !state.isNight;
+                this.birds.forEach(b => b.visible = showBirds);
             }
 
             update(dt, time, windSpeed, weatherMain) {
                 const windEffect = windSpeed * 0.1;
                 this.cloudSprites.forEach(s => {
-                    s.position.x += windEffect * dt * 5;
-                    if (s.position.x > 150) s.position.x = -150;
-                    if (s.position.x < -150) s.position.x = 150;
-                    if(s.userData.shadowCaster) s.userData.shadowCaster.position.copy(s.position);
+                    s.position.x += (windEffect + 2) * dt;
+                    if (s.position.x > 180) s.position.x = -180;
                 });
+
+                this.birds.forEach(b => {
+                    b.userData.angle += dt * b.userData.speed;
+                    const r = b.userData.radius;
+                    b.position.x = Math.cos(b.userData.angle) * r;
+                    b.position.z = Math.sin(b.userData.angle) * r;
+                    b.position.y += Math.sin(time + b.userData.verticalOffset) * 0.02;
+                    b.rotation.y = -b.userData.angle + Math.PI/2;
+                    
+                    // Animate Wings
+                    const wingL = b.getObjectByName("wingL");
+                    const wingR = b.getObjectByName("wingR");
+                    if(wingL && wingR) {
+                        const flap = Math.sin(time * 15) * 0.8;
+                        wingL.rotation.x = flap;
+                        wingR.rotation.x = -flap;
+                    }
+                });
+
                 if (this.precipMaterial.opacity > 0) {
                     const pos = this.precipitationPoints.geometry.attributes.position.array;
                     for (let i = 0; i < this.particleCount; i++) {
-                        let ix = i * 3, iy = i * 3 + 1;
-                        pos[iy] -= this.currentRainSpeed * dt;
-                        pos[ix] += windEffect * dt * 10;
-                        if (weatherMain === 'Snow') pos[ix] += Math.sin(time * 2 + i) * 0.05;
-                        if (pos[iy] < -5) { pos[iy] = 60 + Math.random() * 20; pos[ix] = (Math.random() - 0.5) * 150; }
+                        pos[i * 3 + 1] -= this.currentRainSpeed * dt;
+                        if (pos[i * 3 + 1] < -5) pos[i * 3 + 1] = 80;
                     }
                     this.precipitationPoints.geometry.attributes.position.needsUpdate = true;
                 }
@@ -539,39 +624,32 @@
         function animateLoop() {
             requestAnimationFrame(animateLoop);
             const dt = Math.min(clock.getDelta(), 0.1), time = clock.getElapsedTime();
-            camera.position.x += (state.mouse.x * 12 - camera.position.x) * 0.05;
-            camera.position.y += (-state.mouse.y * 6 + 10 - camera.position.y) * 0.05;
-            camera.lookAt(0, 15, 0);
-            if (state.weatherMain === 'Thunderstorm' && Math.random() < 0.02) {
-                scene.background.setHex(0xaaaaaa);
-                if (environmentSystem) environmentSystem.ambientLight.intensity = 2.0;
-            } else {
-                scene.background.lerp(state.targetSkyColor, 0.05);
-                if (environmentSystem) environmentSystem.ambientLight.intensity += (state.targetAmbient - environmentSystem.ambientLight.intensity) * 0.1;
-            }
+            
+            camera.position.x += (state.mouse.x * 8 - camera.position.x) * 0.05;
+            camera.position.y += (-state.mouse.y * 4 + 12 - camera.position.y) * 0.05;
+            camera.lookAt(0, 10, 0);
+
+            scene.background.lerp(state.targetSkyColor, 0.02);
             scene.fog.color.copy(scene.background);
-            scene.fog.density += (state.targetFogDensity - scene.fog.density) * 0.05;
-            if (environmentSystem && environmentSystem.ground) environmentSystem.ground.material.color.lerp(state.targetGroundColor, 0.05);
-            if (environmentSystem) environmentSystem.update(dt, time, state.windSpeed, state.weatherMain);
+            if (environmentSystem) {
+                environmentSystem.ambientLight.intensity += (state.targetAmbient - environmentSystem.ambientLight.intensity) * 0.05;
+                environmentSystem.ground.material.color.lerp(state.targetGroundColor, 0.02);
+                environmentSystem.update(dt, time, state.windSpeed, state.weatherMain);
+            }
+            
             renderer.render(scene, camera);
         }
 
         // ==========================================
-        // 3. API & UI LOGIC
+        // API & UI LOGIC
         // ==========================================
 
         async function fetchWeather(queryUrl) {
-            logToTerminal(`[SCAN] Querying atmospheric server...`);
+            logToTerminal(`[SCAN] Requesting data...`);
             try {
                 DOM.errorMsg.classList.add('hidden');
                 const response = await fetch(queryUrl);
-                if (!response.ok) {
-                    const contentType = response.headers.get("content-type");
-                    if (contentType && contentType.includes("application/json")) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.message || 'Node Failure.');
-                    } else throw new Error(`Status ${response.status}`);
-                }
+                if (!response.ok) throw new Error('Location not found.');
                 const data = await response.json();
                 updateDashboard(data);
             } catch (error) {
@@ -591,10 +669,13 @@
             state.windSpeed = data.wind.speed;
             state.timezoneOffset = data.timezone;
 
-            logToTerminal(`[DATA] Location: ${data.name}, ${data.sys.country}`);
-            logToTerminal(`[DATA] Pressure: ${data.main.pressure}hPa`);
-            logToTerminal(`[DATA] Visibility: ${data.visibility / 1000}km`);
-            logToTerminal(`[SYS] Atmospheric Sync: 100%`);
+            // Get Full Country Name
+            let fullCountry = data.sys.country;
+            try {
+                fullCountry = regionNames.of(data.sys.country);
+            } catch(e) {}
+
+            logToTerminal(`[DATA] Found: ${data.name}, ${fullCountry}`);
 
             const iconMap = { 'Clear': 'ph-sun', 'Clouds': 'ph-cloud', 'Rain': 'ph-cloud-rain', 'Thunderstorm': 'ph-cloud-lightning', 'Snow': 'ph-snowflake', 'Mist': 'ph-cloud-fog' };
             const iconClass = iconMap[state.weatherMain] || 'ph-cloud';
@@ -609,7 +690,7 @@
             document.body.className = themeClass;
             
             DOM.uiCity.textContent = data.name.toUpperCase();
-            DOM.uiLocationFull.textContent = `${data.name}, ${data.sys.country}`;
+            DOM.uiLocationFull.textContent = `${data.name}, ${fullCountry}`;
             DOM.uiTemp.textContent = Math.round(data.main.temp);
             DOM.uiFeels.textContent = `${Math.round(data.main.feels_like)}°`;
             DOM.uiPressure.textContent = `${data.main.pressure} hPa`;
@@ -617,30 +698,24 @@
             DOM.uiVisibility.textContent = `${(data.visibility / 1000).toFixed(1)} km`;
             DOM.uiDesc.textContent = data.weather[0].description;
             DOM.uiWind.textContent = `${data.wind.speed.toFixed(1)} m/s`;
-            DOM.uiCoords.textContent = `COORD: ${data.coord.lat.toFixed(3)}, ${data.coord.lon.toFixed(3)}`;
+            DOM.uiCoords.textContent = `LOC: ${data.coord.lat.toFixed(3)}, ${data.coord.lon.toFixed(3)}`;
             DOM.uiIcon.innerHTML = `<i class="ph ${iconClass}"></i>`;
 
-            // Calculate Secondary Intel
             const precipRisk = Math.min(100, Math.round((data.clouds.all * 0.7) + (data.main.humidity * 0.3)));
             DOM.uiPrecipRisk.textContent = `${precipRisk}%`;
             
-            // Mock UV Index based on weather/time
             const hr = new Date().getHours();
             const baseUV = (hr > 10 && hr < 16) ? 7 : 2;
             const uv = Math.max(1, Math.round(baseUV * (state.weatherMain === 'Clear' ? 1.2 : 0.4)));
             DOM.uiUV.textContent = uv;
 
-            // Wind Compass
             const deg = data.wind.deg || 0;
             DOM.uiWindCompass.style.transform = `rotate(${deg}deg)`;
-            const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
-            DOM.uiWindDir.textContent = dirs[Math.round(deg / 22.5) % 16];
+            const dirs = ['N','NE','E','SE','S','SW','W','NW'];
+            DOM.uiWindDir.textContent = dirs[Math.round(deg / 45) % 8];
 
-            // Daylight Cycle
             const now = Date.now() / 1000;
-            const total = data.sys.sunset - data.sys.sunrise;
-            const elapsed = now - data.sys.sunrise;
-            const dayProgress = Math.max(0, Math.min(100, (elapsed / total) * 100));
+            const dayProgress = Math.max(0, Math.min(100, ((now - data.sys.sunrise) / (data.sys.sunset - data.sys.sunrise)) * 100));
             DOM.uiDayProgress.style.width = `${dayProgress}%`;
 
             DOM.weatherCard.classList.remove('opacity-0', 'scale-95');
@@ -657,7 +732,6 @@
         function initApp() {
             if (!scene) initThreeJS();
             updateClock();
-            logToTerminal("[SYS] Scanning for local uplink...");
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     (pos) => fetchWeather(`/api/weather?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`),
