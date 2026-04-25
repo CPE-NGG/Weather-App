@@ -1,15 +1,12 @@
-module.exports = async function(req, res) {
-    // 1. Get the query parameters sent by our frontend (index.html)
+module.exports = async (req, res) => {
     const { city, lat, lon } = req.query;
-    
-    // 2. Safely grab the API key from Vercel's private environment variables
     const apiKey = process.env.OPENWEATHER_API_KEY;
 
+    // Strict check to ensure Vercel sees your environment variable
     if (!apiKey) {
-        return res.status(500).json({ message: "Server configuration error: API key missing." });
+        return res.status(500).json({ message: "Vercel cannot find the OPENWEATHER_API_KEY environment variable." });
     }
 
-    // 3. Construct the real OpenWeatherMap URL securely on the backend
     let url = "";
     if (city) {
         url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&units=metric&appid=${apiKey}`;
@@ -19,18 +16,13 @@ module.exports = async function(req, res) {
         return res.status(400).json({ message: "Please provide a city or coordinates." });
     }
 
-    // 4. Fetch the data and send it back to our frontend
     try {
         const response = await fetch(url);
         const data = await response.json();
-
-        if (!response.ok) {
-            return res.status(response.status).json(data);
-        }
-
-        // Send successful data back to the browser
-        res.status(200).json(data);
+        
+        // Return exactly what OpenWeatherMap returns
+        return res.status(response.ok ? 200 : response.status).json(data);
     } catch (error) {
-        res.status(500).json({ message: "Failed to communicate with OpenWeatherMap." });
+        return res.status(500).json({ message: "Internal server crash when fetching data." });
     }
 };
