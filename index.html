@@ -26,6 +26,7 @@
         body.theme-rain { --neon-color: #00ffff; } /* Cyan */
         body.theme-thunder { --neon-color: #b026ff; } /* Purple */
         body.theme-snow { --neon-color: #ffffff; } /* White */
+        body.theme-clouds { --neon-color: #b0c4de; } /* Light Steel Blue / Silver */
         body.theme-autumn { --neon-color: #ff6a00; } /* Orange */
         body.theme-clear { --neon-color: #ffcc00; } /* Sunny Yellow */
 
@@ -174,7 +175,7 @@
         // 1. SYSTEM STATE & CONSTANTS
         // ==========================================
         const state = {
-            weatherMain: 'Clear', // Default state (Dust mode)
+            weatherMain: 'Clear', // Default state
             windSpeed: 0,
             mouse: new THREE.Vector2(-1000, -1000) // Start off-screen
         };
@@ -254,7 +255,7 @@
             constructor(scene) {
                 this.scene = scene;
                 this.particleCount = 5000; // Optimal for web performance
-                this.mode = 'Clear'; // 'Rain', 'Snow', 'Clear'
+                this.mode = 'Clear'; // 'Rain', 'Snow', 'Clear', 'Clouds', 'Autumn'
                 this.windInfluence = 0;
                 
                 this.geometry = new THREE.BufferGeometry();
@@ -341,7 +342,7 @@
             setMode(weatherMain, windSpeed) {
                 this.windInfluence = windSpeed;
                 
-                // Group weather states
+                // Group weather states properly
                 if (['Rain', 'Drizzle'].includes(weatherMain)) {
                     this.mode = 'Rain';
                     this.material.map = this.textures.rain;
@@ -360,9 +361,15 @@
                     this.material.color.setHex(0xffffff); // White
                     this.material.size = 1.5;
                     this.material.opacity = 0.8;
-                } else if (['Clouds', 'Mist', 'Fog', 'Haze', 'Dust', 'Smoke'].includes(weatherMain)) {
-                    this.mode = 'Autumn'; // Swirling leaves/dust
-                    this.material.map = this.textures.snow; // Reuse soft circle
+                } else if (weatherMain === 'Clouds') {
+                    this.mode = 'Clouds';
+                    this.material.map = this.textures.clear;
+                    this.material.color.setHex(0xb0c4de); // Light Steel Blue / Silver
+                    this.material.size = 1.0;
+                    this.material.opacity = 0.5;
+                } else if (['Mist', 'Fog', 'Haze', 'Dust', 'Smoke', 'Sand', 'Ash'].includes(weatherMain)) {
+                    this.mode = 'Autumn'; // Swirling dust/particles
+                    this.material.map = this.textures.snow; 
                     this.material.color.setHex(0xff6a00); // Orange
                     this.material.size = 1.2;
                     this.material.opacity = 0.5;
@@ -383,8 +390,10 @@
                         velocities[i * 3 + 1] = - (Math.random() * 3 + 2); // Slow Y drop
                     } else if (this.mode === 'Autumn') {
                         velocities[i * 3 + 1] = - (Math.random() * 5 + 1); // Moderate diagonal drop
+                    } else if (this.mode === 'Clouds') {
+                        velocities[i * 3 + 1] = (Math.random() - 0.5) * 0.2; // Float very slowly
                     } else {
-                        velocities[i * 3 + 1] = (Math.random() - 0.5) * 0.5; // Float Y for sunny
+                        velocities[i * 3 + 1] = (Math.random() - 0.5) * 0.5; // Float slightly faster for sunny
                     }
                 }
                 this.geometry.attributes.velocity.needsUpdate = true;
@@ -425,8 +434,11 @@
                         // Horizontal oscillation + wind
                         positions[ix] += Math.sin(time * 2 + phases[i]) * 0.05 + windEffect * 0.5;
                     } else if (this.mode === 'Autumn') {
-                        // Swirling sideways motion (Autumn leaves effect)
+                        // Swirling sideways motion
                         positions[ix] += Math.sin(time * 3 + phases[i]) * 0.1 + windEffect * 1.5;
+                    } else if (this.mode === 'Clouds') {
+                        // Very slow, gentle drift
+                        positions[ix] += (Math.random() - 0.5) * 0.03 + windEffect * 0.3;
                     } else {
                         // Floating dust drifts slowly with wind
                         positions[ix] += (Math.random() - 0.5) * 0.05 + windEffect * 0.2;
@@ -548,7 +560,9 @@
                 themeClass = 'theme-thunder';
             } else if (state.weatherMain === 'Snow') {
                 themeClass = 'theme-snow';
-            } else if (['Clouds', 'Mist', 'Fog', 'Haze', 'Dust', 'Smoke'].includes(state.weatherMain)) {
+            } else if (state.weatherMain === 'Clouds') {
+                themeClass = 'theme-clouds';
+            } else if (['Mist', 'Fog', 'Haze', 'Dust', 'Smoke', 'Sand', 'Ash'].includes(state.weatherMain)) {
                 themeClass = 'theme-autumn';
             }
             
