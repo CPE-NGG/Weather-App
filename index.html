@@ -24,8 +24,10 @@
 
         /* Theme Overrides applied via JS */
         body.theme-rain { --neon-color: #00ffff; } /* Cyan */
+        body.theme-thunder { --neon-color: #b026ff; } /* Purple */
         body.theme-snow { --neon-color: #ffffff; } /* White */
-        body.theme-clear { --neon-color: #ffd700; } /* Gold */
+        body.theme-autumn { --neon-color: #ff6a00; } /* Orange */
+        body.theme-clear { --neon-color: #ffcc00; } /* Sunny Yellow */
 
         body {
             margin: 0;
@@ -340,22 +342,34 @@
                 this.windInfluence = windSpeed;
                 
                 // Group weather states
-                if (['Rain', 'Drizzle', 'Thunderstorm'].includes(weatherMain)) {
+                if (['Rain', 'Drizzle'].includes(weatherMain)) {
                     this.mode = 'Rain';
                     this.material.map = this.textures.rain;
                     this.material.color.setHex(0x00ffff); // Cyan
                     this.material.size = 2.0;
                     this.material.opacity = 0.6;
+                } else if (weatherMain === 'Thunderstorm') {
+                    this.mode = 'Rain'; // Uses rain physics
+                    this.material.map = this.textures.rain;
+                    this.material.color.setHex(0xb026ff); // Electric Purple
+                    this.material.size = 3.0; // Heavier rain
+                    this.material.opacity = 0.8;
                 } else if (weatherMain === 'Snow') {
                     this.mode = 'Snow';
                     this.material.map = this.textures.snow;
                     this.material.color.setHex(0xffffff); // White
                     this.material.size = 1.5;
                     this.material.opacity = 0.8;
+                } else if (['Clouds', 'Mist', 'Fog', 'Haze', 'Dust', 'Smoke'].includes(weatherMain)) {
+                    this.mode = 'Autumn'; // Swirling leaves/dust
+                    this.material.map = this.textures.snow; // Reuse soft circle
+                    this.material.color.setHex(0xff6a00); // Orange
+                    this.material.size = 1.2;
+                    this.material.opacity = 0.5;
                 } else {
-                    this.mode = 'Clear'; // Clouds, Clear, Mist, Dust
+                    this.mode = 'Clear'; // Sunny
                     this.material.map = this.textures.clear;
-                    this.material.color.setHex(0xffd700); // Gold
+                    this.material.color.setHex(0xffcc00); // Sunny Yellow
                     this.material.size = 0.8;
                     this.material.opacity = 0.4;
                 }
@@ -364,11 +378,13 @@
                 const velocities = this.geometry.attributes.velocity.array;
                 for (let i = 0; i < this.particleCount; i++) {
                     if (this.mode === 'Rain') {
-                        velocities[i * 3 + 1] = - (Math.random() * 20 + 20); // Fast Y drop
+                        velocities[i * 3 + 1] = - (Math.random() * 20 + 30); // Fast Y drop
                     } else if (this.mode === 'Snow') {
                         velocities[i * 3 + 1] = - (Math.random() * 3 + 2); // Slow Y drop
+                    } else if (this.mode === 'Autumn') {
+                        velocities[i * 3 + 1] = - (Math.random() * 5 + 1); // Moderate diagonal drop
                     } else {
-                        velocities[i * 3 + 1] = (Math.random() - 0.5) * 0.5; // Float Y
+                        velocities[i * 3 + 1] = (Math.random() - 0.5) * 0.5; // Float Y for sunny
                     }
                 }
                 this.geometry.attributes.velocity.needsUpdate = true;
@@ -408,6 +424,9 @@
                     } else if (this.mode === 'Snow') {
                         // Horizontal oscillation + wind
                         positions[ix] += Math.sin(time * 2 + phases[i]) * 0.05 + windEffect * 0.5;
+                    } else if (this.mode === 'Autumn') {
+                        // Swirling sideways motion (Autumn leaves effect)
+                        positions[ix] += Math.sin(time * 3 + phases[i]) * 0.1 + windEffect * 1.5;
                     } else {
                         // Floating dust drifts slowly with wind
                         positions[ix] += (Math.random() - 0.5) * 0.05 + windEffect * 0.2;
@@ -475,7 +494,17 @@
                 console.error("AetherWeather Error:", error);
                 DOM.errorMsg.classList.remove('hidden');
                 DOM.errorMsg.classList.add('flex'); // Use flex for proper button alignment
-                DOM.errorText.textContent = `Data retrieval failed: ${error.message}`;
+                
+                let errorMsg = error.message;
+                
+                // Smart Error Detection: Check if the user is running the file locally
+                if (window.location.protocol === 'file:') {
+                    errorMsg = "Backend blocked: You are viewing a local file. Please open your live Vercel URL to use the backend API.";
+                } else if (error.message === 'Failed to fetch' || error.name === 'TypeError') {
+                    errorMsg = "Network error. Backend unreachable. Are you on the live Vercel URL?";
+                }
+
+                DOM.errorText.textContent = `Data retrieval failed: ${errorMsg}`;
             }
         }
 
@@ -511,9 +540,17 @@
             const iconClass = iconMap[state.weatherMain] || 'ph-cloud';
 
             // Apply Theme
-            let themeClass = 'theme-clear';
-            if (['Rain', 'Drizzle', 'Thunderstorm'].includes(state.weatherMain)) themeClass = 'theme-rain';
-            if (state.weatherMain === 'Snow') themeClass = 'theme-snow';
+            let themeClass = 'theme-clear'; // Default to Sunny
+            
+            if (['Rain', 'Drizzle'].includes(state.weatherMain)) {
+                themeClass = 'theme-rain';
+            } else if (state.weatherMain === 'Thunderstorm') {
+                themeClass = 'theme-thunder';
+            } else if (state.weatherMain === 'Snow') {
+                themeClass = 'theme-snow';
+            } else if (['Clouds', 'Mist', 'Fog', 'Haze', 'Dust', 'Smoke'].includes(state.weatherMain)) {
+                themeClass = 'theme-autumn';
+            }
             
             document.body.className = themeClass;
             
