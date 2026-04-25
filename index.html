@@ -200,7 +200,7 @@
         };
 
         // ==========================================
-        // 2. 3D ENVIRONMENT (CLOUDS, RAIN, SKIES)
+        // 2. 3D ENVIRONMENT (CLOUDS, RAIN, SKIES, SHADOWS)
         // ==========================================
         let scene, camera, renderer, environmentSystem;
         let clock = new THREE.Clock();
@@ -221,6 +221,11 @@
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            
+            // NEW: Enable high-quality soft shadow maps
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
             container.appendChild(renderer.domElement);
 
             // Initialize Environment (Lights are now managed inside the environment class)
@@ -254,11 +259,25 @@
                 this.ground = null;
                 
                 // Add lighting dynamically controllable by weather state
-                this.ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+                this.ambientLight = new THREE.AmbientLight(0xffffff, 0.35); // Lowered to let shadows pop
                 this.scene.add(this.ambientLight);
                 
-                this.dirLight = new THREE.DirectionalLight(0xfff5b6, 1.0);
-                this.dirLight.position.set(50, 100, 20);
+                // Directional Sunlight (Acts as our shadow caster)
+                this.dirLight = new THREE.DirectionalLight(0xfff5b6, 1.2);
+                this.dirLight.position.set(100, 100, 50); // High angle to cast great hill shadows
+                this.dirLight.castShadow = true;
+                
+                // Configure high-res shadow camera to cover the massive terrain
+                this.dirLight.shadow.mapSize.width = 2048;
+                this.dirLight.shadow.mapSize.height = 2048;
+                this.dirLight.shadow.camera.near = 0.5;
+                this.dirLight.shadow.camera.far = 500;
+                this.dirLight.shadow.camera.left = -200;
+                this.dirLight.shadow.camera.right = 200;
+                this.dirLight.shadow.camera.top = 200;
+                this.dirLight.shadow.camera.bottom = -200;
+                this.dirLight.shadow.bias = -0.0005; // Prevent jagged shadow artifacting
+                
                 this.scene.add(this.dirLight);
 
                 // Construct the 3D Space
@@ -271,7 +290,6 @@
 
             // 1. Ground Plane (Rolling Hills Aesthetic)
             createGround() {
-                // Increased segments from 64 to 128 for much smoother curves
                 const geometry = new THREE.PlaneGeometry(400, 400, 128, 128);
                 const positions = geometry.attributes.position.array;
                 
@@ -279,22 +297,26 @@
                 for (let i = 0; i < positions.length; i += 3) {
                     const x = positions[i];
                     const y = positions[i + 1];
-                    const z = Math.sin(x * 0.05) * Math.cos(y * 0.05) * 8 + (Math.random() - 0.5) * 0.5; // Reduced noise
+                    const z = Math.sin(x * 0.05) * Math.cos(y * 0.05) * 8 + (Math.random() - 0.5) * 0.5;
                     positions[i + 2] = z; 
                 }
                 
                 geometry.computeVertexNormals(); 
 
                 const material = new THREE.MeshStandardMaterial({
-                    color: 0x2e4a22, // Starts lush green for sunny days
-                    roughness: 0.8, // Slightly softer light bounce
+                    color: 0x2e4a22, 
+                    roughness: 0.8, 
                     metalness: 0.05,
-                    flatShading: false // Changed to false for smooth, non-pixelated shading
+                    flatShading: false 
                 });
 
                 this.ground = new THREE.Mesh(geometry, material);
                 this.ground.rotation.x = -Math.PI / 2;
                 this.ground.position.y = -5;
+                
+                // NEW: Make the hills cast and receive shadows for massive 3D depth
+                this.ground.receiveShadow = true;
+                this.ground.castShadow = true;
                 
                 this.scene.add(this.ground);
             }
@@ -302,18 +324,15 @@
             // 2. Procedural Volumetric Clouds
             createClouds() {
                 const canvas = document.createElement('canvas');
-                // Quadrupled resolution for high-definition clouds
                 canvas.width = 1024; canvas.height = 1024;
                 const ctx = canvas.getContext('2d');
                 
-                // Create softer, overlapping spheres for a highly realistic, smooth cloud map
                 for (let i = 0; i < 60; i++) {
                     const x = 512 + (Math.random() - 0.5) * 400;
                     const y = 512 + (Math.random() - 0.5) * 250;
-                    const r = 100 + Math.random() * 200; // Larger, softer radius
+                    const r = 100 + Math.random() * 200;
                     const grad = ctx.createRadialGradient(x, y, 0, x, y, r);
                     
-                    // Softer gradient stops to prevent banding
                     grad.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
                     grad.addColorStop(0.5, 'rgba(255, 255, 255, 0.15)');
                     grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
@@ -325,7 +344,7 @@
                 }
                 
                 const cloudTexture = new THREE.CanvasTexture(canvas);
-                cloudTexture.anisotropy = renderer.capabilities.getMaxAnisotropy(); // Improves texture at angles
+                cloudTexture.anisotropy = renderer.capabilities.getMaxAnisotropy(); 
 
                 const cloudMaterial = new THREE.SpriteMaterial({
                     map: cloudTexture,
@@ -335,6 +354,10 @@
                     color: 0xffffff
                 });
 
+                // Setup invisible spheres that track the clouds to cast volumetric shadows
+                const shadowGeo = new THREE.SphereGeometry(1, 16, 16);
+                const shadowMat = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false }); // Invisible but casts shadow
+
                 for(let i = 0; i < 60; i++) {
                     const sprite = new THREE.Sprite(cloudMaterial.clone());
                     sprite.position.set(
@@ -342,11 +365,21 @@
                         20 + Math.random() * 30,     // Y
                         (Math.random() - 0.5) * 150 - 20 // Z
                     );
-                    const scale = 30 + Math.random() * 40; // Scaled up slightly to match hi-res
+                    const scale = 30 + Math.random() * 40; 
                     sprite.scale.set(scale, scale * 0.6, 1); 
                     
                     this.cloudSprites.push(sprite);
                     this.scene.add(sprite);
+
+                    // NEW: Add the invisible shadow caster
+                    const shadowCaster = new THREE.Mesh(shadowGeo, shadowMat);
+                    shadowCaster.position.copy(sprite.position);
+                    shadowCaster.scale.set(scale * 0.4, scale * 0.2, scale * 0.4); 
+                    shadowCaster.castShadow = true;
+                    this.scene.add(shadowCaster);
+                    
+                    // Attach it to the sprite so we can move it together
+                    sprite.userData.shadowCaster = shadowCaster;
                 }
             }
 
@@ -388,7 +421,6 @@
             }
 
             setMode(weatherMain, windSpeed) {
-                // Determine Environment Colors and Display
                 let cloudColor = 0xffffff;
                 let cloudOpacity = 0.8;
                 let rainOpacity = 0.0;
@@ -398,9 +430,9 @@
                 if (['Rain', 'Drizzle'].includes(weatherMain)) {
                     state.targetSkyColor.setHex(0x2a3544); 
                     state.targetFogDensity = 0.02;
-                    state.targetGroundColor.setHex(0x151b22); // Dark wet ground
+                    state.targetGroundColor.setHex(0x151b22); 
                     state.targetAmbient = 0.4;
-                    this.dirLight.intensity = 0.2;
+                    this.dirLight.intensity = 0.1; // Dim light for overcast/rainy shadows
                     cloudColor = 0x4a5568; 
                     cloudOpacity = 0.9;
                     rainOpacity = 0.5;
@@ -411,7 +443,7 @@
                     state.targetFogDensity = 0.03;
                     state.targetGroundColor.setHex(0x050508);
                     state.targetAmbient = 0.2;
-                    this.dirLight.intensity = 0.1;
+                    this.dirLight.intensity = 0.0; // No hard shadows in the pitch black
                     cloudColor = 0x111115; 
                     cloudOpacity = 1.0;
                     rainOpacity = 0.7;
@@ -420,9 +452,9 @@
                 } else if (weatherMain === 'Snow') {
                     state.targetSkyColor.setHex(0x8899aa); 
                     state.targetFogDensity = 0.02;
-                    state.targetGroundColor.setHex(0xccd6e0); // White snowy terrain
-                    state.targetAmbient = 0.7;
-                    this.dirLight.intensity = 0.4;
+                    state.targetGroundColor.setHex(0xccd6e0); 
+                    state.targetAmbient = 0.5;
+                    this.dirLight.intensity = 0.2;
                     cloudColor = 0xffffff;
                     cloudOpacity = 0.9;
                     rainOpacity = 0.6;
@@ -431,31 +463,30 @@
                 } else if (weatherMain === 'Clouds') {
                     state.targetSkyColor.setHex(0x5c6b7a); 
                     state.targetFogDensity = 0.015;
-                    state.targetGroundColor.setHex(0x223026); // Muted dark green
-                    state.targetAmbient = 0.5;
-                    this.dirLight.intensity = 0.4;
+                    state.targetGroundColor.setHex(0x223026); 
+                    state.targetAmbient = 0.6;
+                    this.dirLight.intensity = 0.2; // Soft shadows for a cloudy day
                     cloudColor = 0xaaaaaa; 
                     cloudOpacity = 0.85;
                 } else if (['Mist', 'Fog', 'Haze', 'Dust', 'Smoke'].includes(weatherMain)) {
-                    state.targetSkyColor.setHex(0xc2b2a1); // Taupe Mist
-                    state.targetFogDensity = 0.02; // Lowered to reveal 3D hills
-                    state.targetGroundColor.setHex(0x4a4238); // Brownish ground
+                    state.targetSkyColor.setHex(0xc2b2a1); 
+                    state.targetFogDensity = 0.02; 
+                    state.targetGroundColor.setHex(0x4a4238); 
                     state.targetAmbient = 0.6;
-                    this.dirLight.intensity = 0.3;
+                    this.dirLight.intensity = 0.1;
                     cloudColor = 0xe0d6c8;
                     cloudOpacity = 0.6;
                 } else {
-                    // Clear / Sunny
-                    state.targetSkyColor.setHex(0x5ca0d3); // Bright sky blue
-                    state.targetFogDensity = 0.005; // Extremely clear
-                    state.targetGroundColor.setHex(0x2e4a22); // Lush dark green
-                    state.targetAmbient = 0.7;
-                    this.dirLight.intensity = 1.0;
+                    // Clear / Sunny (Highest contrast shadows)
+                    state.targetSkyColor.setHex(0x5ca0d3); 
+                    state.targetFogDensity = 0.005; 
+                    state.targetGroundColor.setHex(0x2e4a22); 
+                    state.targetAmbient = 0.35; // Lower ambient to make shadows darker
+                    this.dirLight.intensity = 1.2; // High directional for strong, distinct shadows
                     cloudColor = 0xffffff;
-                    cloudOpacity = 0.4; // Wispy
+                    cloudOpacity = 0.4; 
                 }
 
-                // Apply changes to objects
                 this.precipMaterial.opacity = rainOpacity;
                 this.precipMaterial.color.setHex(rainColor);
                 this.currentRainSpeed = rainSpeed;
@@ -473,6 +504,11 @@
                     sprite.position.x += windEffect * dt * 5;
                     if (sprite.position.x > 100) sprite.position.x = -100;
                     if (sprite.position.x < -100) sprite.position.x = 100;
+
+                    // NEW: Move the invisible shadow caster with the cloud sprite
+                    if(sprite.userData.shadowCaster) {
+                        sprite.userData.shadowCaster.position.copy(sprite.position);
+                    }
                 });
 
                 // 2. Precipitation Physics
@@ -513,7 +549,7 @@
 
             // Thunderstorm Lightning Logic
             if (state.weatherMain === 'Thunderstorm' && Math.random() < 0.02) {
-                // Lightning Flash hits the sky AND the lighting
+                // Lightning Flash hits the sky AND the ambient lighting
                 scene.background.setHex(0xaaaaaa);
                 if (environmentSystem) environmentSystem.ambientLight.intensity = 2.0;
             } else {
