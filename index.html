@@ -178,8 +178,10 @@
             weatherMain: 'Clear', // Default state
             windSpeed: 0,
             mouse: new THREE.Vector2(0, 0),
-            targetSkyColor: new THREE.Color(0x0a1a3a),
-            targetFogDensity: 0.015
+            targetSkyColor: new THREE.Color(0x5ca0d3),
+            targetGroundColor: new THREE.Color(0x2e4a22),
+            targetFogDensity: 0.005,
+            targetAmbient: 0.7
         };
 
         const DOM = {
@@ -208,8 +210,8 @@
             
             // Scene Setup
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x0a1a3a);
-            scene.fog = new THREE.FogExp2(0x0a1a3a, 0.015);
+            scene.background = new THREE.Color(0x5ca0d3);
+            scene.fog = new THREE.FogExp2(0x5ca0d3, 0.005);
 
             // Camera Setup
             camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -221,16 +223,7 @@
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             container.appendChild(renderer.domElement);
 
-            // Add lighting for 3D environment
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
-            scene.add(ambientLight);
-            
-            // Add a directional light so the 3D terrain has visible shadows/contrast
-            const dirLight = new THREE.DirectionalLight(0x88bbff, 0.5);
-            dirLight.position.set(50, 100, 20);
-            scene.add(dirLight);
-
-            // Initialize Environment
+            // Initialize Environment (Lights are now managed inside the environment class)
             environmentSystem = new WeatherEnvironment(scene);
 
             // Event Listeners
@@ -258,7 +251,16 @@
                 this.scene = scene;
                 this.cloudSprites = [];
                 this.precipitationPoints = null;
+                this.ground = null;
                 
+                // Add lighting dynamically controllable by weather state
+                this.ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+                this.scene.add(this.ambientLight);
+                
+                this.dirLight = new THREE.DirectionalLight(0xfff5b6, 1.0);
+                this.dirLight.position.set(50, 100, 20);
+                this.scene.add(this.dirLight);
+
                 // Construct the 3D Space
                 this.createGround();
                 this.createClouds();
@@ -267,45 +269,41 @@
                 this.setMode('Clear', 0);
             }
 
-            // 1. Ground Plane (Dashboard Grid Aesthetic)
+            // 1. Ground Plane (Rolling Hills Aesthetic)
             createGround() {
-                // Create a large plane with many segments for terrain displacement
                 const geometry = new THREE.PlaneGeometry(400, 400, 64, 64);
-
-                // Displace vertices to create a low-poly terrain/hills
                 const positions = geometry.attributes.position.array;
+                
+                // Displace vertices to create a low-poly terrain/hills
                 for (let i = 0; i < positions.length; i += 3) {
                     const x = positions[i];
                     const y = positions[i + 1];
-                    // Create rolling hills using sine waves and a tiny bit of random noise
                     const z = Math.sin(x * 0.05) * Math.cos(y * 0.05) * 8 + (Math.random() - 0.5) * 2;
-                    positions[i + 2] = z; // Displace the height
+                    positions[i + 2] = z; 
                 }
                 
-                geometry.computeVertexNormals(); // Required for lighting/shadows
+                geometry.computeVertexNormals(); 
 
                 const material = new THREE.MeshStandardMaterial({
-                    color: 0x0a0f18, // Very dark blue/charcoal terrain
+                    color: 0x2e4a22, // Starts lush green for sunny days
                     roughness: 0.9,
                     metalness: 0.1,
-                    flatShading: true // Gives a stylish, modern low-poly look
+                    flatShading: true
                 });
 
-                const ground = new THREE.Mesh(geometry, material);
-                ground.rotation.x = -Math.PI / 2; // Lay it flat on the XZ plane
-                ground.position.y = -5; // Move below the camera origin
+                this.ground = new THREE.Mesh(geometry, material);
+                this.ground.rotation.x = -Math.PI / 2;
+                this.ground.position.y = -5;
                 
-                this.scene.add(ground);
+                this.scene.add(this.ground);
             }
 
             // 2. Procedural Volumetric Clouds
             createClouds() {
-                // Generate a fluffy cloud texture dynamically using Canvas
                 const canvas = document.createElement('canvas');
                 canvas.width = 512; canvas.height = 512;
                 const ctx = canvas.getContext('2d');
                 
-                // Draw overlapping soft circles to mimic a cloud
                 for (let i = 0; i < 40; i++) {
                     const x = 256 + (Math.random() - 0.5) * 250;
                     const y = 256 + (Math.random() - 0.5) * 150;
@@ -328,17 +326,15 @@
                     color: 0xffffff
                 });
 
-                // Spawn a layer of 3D Clouds
                 for(let i = 0; i < 60; i++) {
                     const sprite = new THREE.Sprite(cloudMaterial.clone());
-                    // Spread them out in the sky
                     sprite.position.set(
                         (Math.random() - 0.5) * 200, // X
-                        20 + Math.random() * 30,     // Y (Above grid)
-                        (Math.random() - 0.5) * 150 - 20 // Z (Depth)
+                        20 + Math.random() * 30,     // Y
+                        (Math.random() - 0.5) * 150 - 20 // Z
                     );
                     const scale = 20 + Math.random() * 30;
-                    sprite.scale.set(scale, scale * 0.6, 1); // Wider than tall
+                    sprite.scale.set(scale, scale * 0.6, 1); 
                     
                     this.cloudSprites.push(sprite);
                     this.scene.add(sprite);
@@ -359,7 +355,6 @@
 
                 geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
-                // Soft circle for rain streak / snowflake
                 const canvas = document.createElement('canvas');
                 canvas.width = 16; canvas.height = 32;
                 const ctx = canvas.getContext('2d');
@@ -374,7 +369,7 @@
                     size: 1.5,
                     map: new THREE.CanvasTexture(canvas),
                     transparent: true,
-                    opacity: 0.0, // Hidden by default
+                    opacity: 0.0, 
                     depthWrite: false,
                     blending: THREE.AdditiveBlending
                 });
@@ -389,48 +384,66 @@
                 let cloudOpacity = 0.8;
                 let rainOpacity = 0.0;
                 let rainSpeed = 0;
-                let rainColor = 0x00ffff; // Cyan default
+                let rainColor = 0x00ffff; 
                 
                 if (['Rain', 'Drizzle'].includes(weatherMain)) {
-                    state.targetSkyColor.setHex(0x1a202c); // Dark stormy gray
+                    state.targetSkyColor.setHex(0x2a3544); 
                     state.targetFogDensity = 0.02;
-                    cloudColor = 0x4a5568; // Dark gray clouds
+                    state.targetGroundColor.setHex(0x151b22); // Dark wet ground
+                    state.targetAmbient = 0.4;
+                    this.dirLight.intensity = 0.2;
+                    cloudColor = 0x4a5568; 
                     cloudOpacity = 0.9;
                     rainOpacity = 0.5;
                     rainSpeed = 40;
-                    rainColor = 0x00ffff; // Cyan rain
+                    rainColor = 0x00ffff; 
                 } else if (weatherMain === 'Thunderstorm') {
-                    state.targetSkyColor.setHex(0x050508); // Pitch black
+                    state.targetSkyColor.setHex(0x050508); 
                     state.targetFogDensity = 0.03;
-                    cloudColor = 0x111115; // Very dark clouds
+                    state.targetGroundColor.setHex(0x050508);
+                    state.targetAmbient = 0.2;
+                    this.dirLight.intensity = 0.1;
+                    cloudColor = 0x111115; 
                     cloudOpacity = 1.0;
                     rainOpacity = 0.7;
                     rainSpeed = 50;
-                    rainColor = 0xb026ff; // Purple rain
+                    rainColor = 0xb026ff; 
                 } else if (weatherMain === 'Snow') {
-                    state.targetSkyColor.setHex(0x4a5568); // Pale gray
-                    state.targetFogDensity = 0.025;
+                    state.targetSkyColor.setHex(0x8899aa); 
+                    state.targetFogDensity = 0.02;
+                    state.targetGroundColor.setHex(0xccd6e0); // White snowy terrain
+                    state.targetAmbient = 0.7;
+                    this.dirLight.intensity = 0.4;
                     cloudColor = 0xffffff;
                     cloudOpacity = 0.9;
                     rainOpacity = 0.6;
-                    rainSpeed = 5; // Slow fall
-                    rainColor = 0xffffff; // White snow
+                    rainSpeed = 5; 
+                    rainColor = 0xffffff; 
                 } else if (weatherMain === 'Clouds') {
-                    state.targetSkyColor.setHex(0x2d3748); // Slate sky
+                    state.targetSkyColor.setHex(0x5c6b7a); 
                     state.targetFogDensity = 0.015;
-                    cloudColor = 0x8899aa; // Light gray clouds
+                    state.targetGroundColor.setHex(0x223026); // Muted dark green
+                    state.targetAmbient = 0.5;
+                    this.dirLight.intensity = 0.4;
+                    cloudColor = 0xaaaaaa; 
                     cloudOpacity = 0.85;
-                } else if (['Mist', 'Fog', 'Haze'].includes(weatherMain)) {
-                    state.targetSkyColor.setHex(0x5c4b37); // Brown/Orange
-                    state.targetFogDensity = 0.05; // High fog
-                    cloudColor = 0xff6a00;
-                    cloudOpacity = 0.3;
+                } else if (['Mist', 'Fog', 'Haze', 'Dust', 'Smoke'].includes(weatherMain)) {
+                    state.targetSkyColor.setHex(0xc2b2a1); // Taupe Mist
+                    state.targetFogDensity = 0.02; // Lowered to reveal 3D hills
+                    state.targetGroundColor.setHex(0x4a4238); // Brownish ground
+                    state.targetAmbient = 0.6;
+                    this.dirLight.intensity = 0.3;
+                    cloudColor = 0xe0d6c8;
+                    cloudOpacity = 0.6;
                 } else {
                     // Clear / Sunny
-                    state.targetSkyColor.setHex(0x0a1a3a); // Midnight Blue
-                    state.targetFogDensity = 0.01;
+                    state.targetSkyColor.setHex(0x5ca0d3); // Bright sky blue
+                    state.targetFogDensity = 0.005; // Extremely clear
+                    state.targetGroundColor.setHex(0x2e4a22); // Lush dark green
+                    state.targetAmbient = 0.7;
+                    this.dirLight.intensity = 1.0;
                     cloudColor = 0xffffff;
-                    cloudOpacity = 0.1; // Barely visible
+                    cloudOpacity = 0.4; // Wispy
                 }
 
                 // Apply changes to objects
@@ -449,7 +462,6 @@
                 const windEffect = windSpeed * 0.1;
                 this.cloudSprites.forEach(sprite => {
                     sprite.position.x += windEffect * dt * 5;
-                    // Wrap clouds around
                     if (sprite.position.x > 100) sprite.position.x = -100;
                     if (sprite.position.x < -100) sprite.position.x = 100;
                 });
@@ -461,18 +473,13 @@
                         let ix = i * 3;
                         let iy = i * 3 + 1;
                         
-                        // Fall down
                         positions[iy] -= this.currentRainSpeed * dt;
-                        
-                        // Blow sideways with wind
                         positions[ix] += windEffect * dt * 10;
                         
                         if (weatherMain === 'Snow') {
-                            // Wavy snow
                             positions[ix] += Math.sin(time * 2 + i) * 0.05;
                         }
 
-                        // Reset at ground level (y=-5)
                         if (positions[iy] < -5) {
                             positions[iy] = 60 + Math.random() * 20;
                             positions[ix] = (Math.random() - 0.5) * 150;
@@ -497,16 +504,26 @@
 
             // Thunderstorm Lightning Logic
             if (state.weatherMain === 'Thunderstorm' && Math.random() < 0.02) {
-                // Lightning Flash
+                // Lightning Flash hits the sky AND the lighting
                 scene.background.setHex(0xaaaaaa);
+                if (environmentSystem) environmentSystem.ambientLight.intensity = 2.0;
             } else {
                 // Smooth transition of sky colors
                 scene.background.lerp(state.targetSkyColor, 0.05);
+                if (environmentSystem) {
+                    // Smoothly restore ambient light
+                    environmentSystem.ambientLight.intensity += (state.targetAmbient - environmentSystem.ambientLight.intensity) * 0.1;
+                }
             }
             
             // Match fog color to sky and lerp density
             scene.fog.color.copy(scene.background);
             scene.fog.density += (state.targetFogDensity - scene.fog.density) * 0.05;
+
+            // Lerp ground color
+            if (environmentSystem && environmentSystem.ground) {
+                environmentSystem.ground.material.color.lerp(state.targetGroundColor, 0.05);
+            }
 
             if (environmentSystem) {
                 environmentSystem.update(dt, time, state.windSpeed, state.weatherMain);
