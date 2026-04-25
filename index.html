@@ -271,14 +271,15 @@
 
             // 1. Ground Plane (Rolling Hills Aesthetic)
             createGround() {
-                const geometry = new THREE.PlaneGeometry(400, 400, 64, 64);
+                // Increased segments from 64 to 128 for much smoother curves
+                const geometry = new THREE.PlaneGeometry(400, 400, 128, 128);
                 const positions = geometry.attributes.position.array;
                 
-                // Displace vertices to create a low-poly terrain/hills
+                // Displace vertices to create a smooth rolling terrain
                 for (let i = 0; i < positions.length; i += 3) {
                     const x = positions[i];
                     const y = positions[i + 1];
-                    const z = Math.sin(x * 0.05) * Math.cos(y * 0.05) * 8 + (Math.random() - 0.5) * 2;
+                    const z = Math.sin(x * 0.05) * Math.cos(y * 0.05) * 8 + (Math.random() - 0.5) * 0.5; // Reduced noise
                     positions[i + 2] = z; 
                 }
                 
@@ -286,9 +287,9 @@
 
                 const material = new THREE.MeshStandardMaterial({
                     color: 0x2e4a22, // Starts lush green for sunny days
-                    roughness: 0.9,
-                    metalness: 0.1,
-                    flatShading: true
+                    roughness: 0.8, // Slightly softer light bounce
+                    metalness: 0.05,
+                    flatShading: false // Changed to false for smooth, non-pixelated shading
                 });
 
                 this.ground = new THREE.Mesh(geometry, material);
@@ -301,22 +302,30 @@
             // 2. Procedural Volumetric Clouds
             createClouds() {
                 const canvas = document.createElement('canvas');
-                canvas.width = 512; canvas.height = 512;
+                // Quadrupled resolution for high-definition clouds
+                canvas.width = 1024; canvas.height = 1024;
                 const ctx = canvas.getContext('2d');
                 
-                for (let i = 0; i < 40; i++) {
-                    const x = 256 + (Math.random() - 0.5) * 250;
-                    const y = 256 + (Math.random() - 0.5) * 150;
-                    const r = 50 + Math.random() * 100;
+                // Create softer, overlapping spheres for a highly realistic, smooth cloud map
+                for (let i = 0; i < 60; i++) {
+                    const x = 512 + (Math.random() - 0.5) * 400;
+                    const y = 512 + (Math.random() - 0.5) * 250;
+                    const r = 100 + Math.random() * 200; // Larger, softer radius
                     const grad = ctx.createRadialGradient(x, y, 0, x, y, r);
-                    grad.addColorStop(0, 'rgba(255, 255, 255, 0.7)');
+                    
+                    // Softer gradient stops to prevent banding
+                    grad.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+                    grad.addColorStop(0.5, 'rgba(255, 255, 255, 0.15)');
                     grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                    
                     ctx.fillStyle = grad;
                     ctx.beginPath();
                     ctx.arc(x, y, r, 0, Math.PI*2);
                     ctx.fill();
                 }
+                
                 const cloudTexture = new THREE.CanvasTexture(canvas);
+                cloudTexture.anisotropy = renderer.capabilities.getMaxAnisotropy(); // Improves texture at angles
 
                 const cloudMaterial = new THREE.SpriteMaterial({
                     map: cloudTexture,
@@ -333,7 +342,7 @@
                         20 + Math.random() * 30,     // Y
                         (Math.random() - 0.5) * 150 - 20 // Z
                     );
-                    const scale = 20 + Math.random() * 30;
+                    const scale = 30 + Math.random() * 40; // Scaled up slightly to match hi-res
                     sprite.scale.set(scale, scale * 0.6, 1); 
                     
                     this.cloudSprites.push(sprite);
